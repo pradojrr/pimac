@@ -71,6 +71,7 @@ const CIDADES_DATA = {
         ] 
       }
     ],
+    // Todos os 22 Terminais Urbanos Oficiais de Integração da URBS Curitiba
     terminais: [
       { id: "t1", nome: "Terminal Capão Raso", localizacao: "Av. Winston Churchill, s/n - Capão Raso, Curitiba - PR, 81130-000", fluxo: "Muito Alto", linhasAtendidas: 24, status: "Operacional", icone: "🏫", coordenadas: [-25.5133, -49.2974] },
       { id: "t2", nome: "Terminal Cabral", localizacao: "Av. Paraná, s/n - Cabral, Curitiba - PR, 80035-130", fluxo: "Alto", linhasAtendidas: 19, status: "Operacional", icone: "🏫", coordenadas: [-25.4065, -49.2526] },
@@ -79,7 +80,21 @@ const CIDADES_DATA = {
       { id: "t5", nome: "Terminal Santa Cândida", localizacao: "Av. Paraná, s/n - Santa Cândida, Curitiba - PR, 82640-000", fluxo: "Médio", linhasAtendidas: 15, status: "Operacional", icone: "🏫", coordenadas: [-25.3789, -49.2224] },
       { id: "t6", nome: "Terminal Campina do Siqueira", localizacao: "Rua Padre Anchieta, s/n - Campina do Siqueira, Curitiba - PR, 80730-000", fluxo: "Alto", linhasAtendidas: 17, status: "Operacional", icone: "🏫", coordenadas: [-25.4358, -49.3069] },
       { id: "t7", nome: "Terminal Hauer", localizacao: "Av. Marechal Floriano Peixoto, s/n - Hauer, Curitiba - PR, 81630-000", fluxo: "Alto", linhasAtendidas: 18, status: "Manutenção Parcial", icone: "🏫", coordenadas: [-25.4812, -49.2458] },
-      { id: "t8", nome: "Terminal Guadalupe", localizacao: "Rua João Negrão, s/n - Centro, Curitiba - PR, 80010-200", fluxo: "Muito Alto", linhasAtendidas: 26, status: "Operacional", icone: "🏫", coordenadas: [-25.4316, -49.2646] }
+      { id: "t8", nome: "Terminal Guadalupe", localizacao: "Rua João Negrão, s/n - Centro, Curitiba - PR, 80010-200", fluxo: "Muito Alto", linhasAtendidas: 26, status: "Operacional", icone: "🏫", coordenadas: [-25.4316, -49.2646] },
+      { id: "t9", nome: "Terminal Bairro Alto", localizacao: "Rua José de Oliveira Franco, 1699 - Bairro Alto, Curitiba - PR, 82820-290", fluxo: "Médio", linhasAtendidas: 12, status: "Operacional", icone: "🏫", coordenadas: [-25.4042, -49.2078] },
+      { id: "t10", nome: "Terminal Barreirinha", localizacao: "Av. Anita Garibaldi, 5650 - Barreirinha, Curitiba - PR, 80540-180", fluxo: "Médio", linhasAtendidas: 10, status: "Operacional", icone: "🏫", coordenadas: [-25.3672, -49.2589] },
+      { id: "t11", nome: "Terminal Boa Vista", localizacao: "Av. Paraná, 2817 - Boa Vista, Curitiba - PR, 82510-000", fluxo: "Alto", linhasAtendidas: 14, status: "Operacional", icone: "🏫", coordenadas: [-25.3908, -49.2415] },
+      { id: "t12", nome: "Terminal Boqueirão", localizacao: "Av. Marechal Floriano Peixoto, 10200 - Boqueirão, Curitiba - PR, 81670-000", fluxo: "Crítico", linhasAtendidas: 25, status: "Sobrecarga", icone: "🏫", coordenadas: [-25.5065, -49.2312] },
+      { id: "t13", nome: "Terminal Caiuá", localizacao: "Rua Elvira Cordeiro, 150 - Caiuá, Curitiba - PR, 81260-150", fluxo: "Médio", linhasAtendidas: 8, status: "Operacional", icone: "🏫", coordenadas: [-25.4965, -49.3490] },
+      { id: "t14", nome: "Terminal Campo Comprido", localizacao: "Rua Prof. Pedro Viriato Parigot de Souza, 5100 - Campo Comprido, Curitiba - PR, 81280-330", fluxo: "Alto", linhasAtendidas: 16, status: "Operacional", icone: "🏫", coordenadas: [-25.4419, -49.3444] },
+      { id: "t15", nome: "Terminal Capão da Imbuia", localizacao: "Av. Presidente Affonso Camargo, s/n - Capão da Imbuia, Curitiba - PR, 82810-080", fluxo: "Alto", linhasAtendidas: 15, status: "Operacional", icone: "🏫", coordenadas: [-25.4352, -49.2132] },
+      { id: "t16", nome: "Terminal Carmo", localizacao: "Av. Marechal Floriano Peixoto, 8430 - Carmo, Curitiba - PR, 81650-000", fluxo: "Alto", linhasAtendidas: 13, status: "Operacional", icone: "🏫", coordenadas: [-25.4889, -49.2355] },
+      { id: "t17", nome: "Terminal Centenário", localizacao: "Rua Filipinas, 1010 - Centenário, Curitiba - PR, 82950-150", fluxo: "Médio", linhasAtendidas: 9, status: "Operacional", icone: "🏫", coordenadas: [-25.4712, -49.2011] },
+      { id: "t18", nome: "Terminal CIC", localizacao: "Rua Pedro Gusso, 2001 - Cidade Industrial, Curitiba - PR, 81310-000", fluxo: "Muito Alto", linhasAtendidas: 18, status: "Operacional", icone: "🏫", coordenadas: [-25.4878, -49.3245] },
+      { id: "t19", nome: "Terminal Fazendinha", localizacao: "Rua Carlos Klemtz, 1600 - Fazendinha, Curitiba - PR, 81320-000", fluxo: "Muito Alto", linhasAtendidas: 20, status: "Operacional", icone: "🏫", coordenadas: [-25.4665, -49.3175] },
+      { id: "t20", nome: "Terminal Santa Felicidade", localizacao: "Av. Manoel Ribas, 5600 - Santa Felicidade, Curitiba - PR, 82400-000", fluxo: "Médio", linhasAtendidas: 11, status: "Operacional", icone: "🏫", coordenadas: [-25.4005, -49.3298] },
+      { id: "t21", nome: "Terminal Sítio Cercado", localizacao: "Rua dos Pioneiros, 1100 - Sítio Cercado, Curitiba - PR, 82590-300", fluxo: "Alto", linhasAtendidas: 15, status: "Operacional", icone: "🏫", coordenadas: [-25.5392, -49.2678] },
+      { id: "t22", nome: "Terminal Tatuquara", localizacao: "Rua Olivardo Konoruski, 100 - Tatuquara, Curitiba - PR, 81470-432", fluxo: "Médio", linhasAtendidas: 12, status: "Operacional", icone: "🏫", coordenadas: [-25.5689, -49.3412] }
     ],
     contatos: [
       { id: "c1", name: "URBS Curitiba (Ouvidoria de Transportes)", tel: "156", desc: "Central de atendimento de trânsito e urbanização", icone: "🌲" },
@@ -98,9 +113,29 @@ const cuponsParceiros = [
 export default function App() {
   const [selectedCity] = useState("Curitiba/PR");
 
+  // Estado de Autenticação Ativa (Sessão do Usuário)
+  const [usuarioLogado, setUsuarioLogado] = useState(() => {
+    const salvo = localStorage.getItem('pimac_user_session_cwb');
+    if (salvo) {
+      try { return JSON.parse(salvo); } catch (e) { console.error(e); }
+    }
+    return null; // Força login de entrada
+  });
+
+  // Troca de tela do formulário de acesso
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  
+  // Campos de entrada do Login/Registro
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginSenha, setLoginSenha] = useState('');
+  const [regNome, setRegNome] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regSenha, setRegSenha] = useState('');
+  const [regCartao, setRegCartao] = useState('');
+
   // Estados com persistência local
   const [linhas, setLinhas] = useState(() => {
-    const salvas = localStorage.getItem('pimac_linhas_cwb_v3');
+    const salvas = localStorage.getItem('pimac_linhas_cwb');
     if (salvas) {
       try {
         const parseadas = JSON.parse(salvas);
@@ -111,7 +146,7 @@ export default function App() {
   });
 
   const [alertas, setAlertas] = useState(() => {
-    const salvos = localStorage.getItem('pimac_alertas_cwb_v3');
+    const salvos = localStorage.getItem('pimac_alertas_cwb');
     if (salvos) {
       try {
         const parseados = JSON.parse(salvos);
@@ -125,7 +160,7 @@ export default function App() {
   });
 
   const [userProfile, setUserProfile] = useState(() => {
-    const salvo = localStorage.getItem('pimac_profile_cwb_v3');
+    const salvo = localStorage.getItem('pimac_profile_cwb');
     if (salvo) {
       try { return JSON.parse(salvo); } catch (e) { console.error(e); }
     }
@@ -133,7 +168,7 @@ export default function App() {
   });
 
   const [cuponsResgatados, setCuponsResgatados] = useState(() => {
-    const salvos = localStorage.getItem('pimac_cupons_cwb_v3');
+    const salvos = localStorage.getItem('pimac_cupons_cwb');
     if (salvos) {
       try { return JSON.parse(salvos); } catch (e) { console.error(e); }
     }
@@ -228,7 +263,7 @@ export default function App() {
 
     tileLayerRef.current = tileLayer;
 
-    // Adiciona marcadores para os terminais reais de Curitiba
+    // Adiciona marcadores para os 22 terminais reais de Curitiba
     CIDADES_DATA["Curitiba/PR"].terminais.forEach(t => {
       const terminalIcon = L.divIcon({
         html: `<div class="bg-blue-600 border-2 border-white rounded-lg p-1.5 shadow-lg flex items-center justify-center text-xs w-6 h-6 transform hover:scale-115 transition-all">🏫</div>`,
@@ -297,11 +332,19 @@ export default function App() {
     });
   }, [mapTicks, activeSection]);
 
+  // Ciclo para rodar a simulação do mapa em tempo real
   useEffect(() => {
-    localStorage.setItem('pimac_linhas_cwb_v3', JSON.stringify(linhas));
-    localStorage.setItem('pimac_alertas_cwb_v3', JSON.stringify(alertas));
-    localStorage.setItem('pimac_profile_cwb_v3', JSON.stringify(userProfile));
-    localStorage.setItem('pimac_cupons_cwb_v3', JSON.stringify(cuponsResgatados));
+    const timer = setInterval(() => {
+      setMapTicks((prev) => (prev >= 100 ? 0 : prev + 0.4));
+    }, 100);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('pimac_linhas_cwb', JSON.stringify(linhas));
+    localStorage.setItem('pimac_alertas_cwb', JSON.stringify(alertas));
+    localStorage.setItem('pimac_profile_cwb', JSON.stringify(userProfile));
+    localStorage.setItem('pimac_cupons_cwb', JSON.stringify(cuponsResgatados));
   }, [linhas, alertas, userProfile, cuponsResgatados]);
 
   const mostrarToast = (msg, tipo = 'success') => {
@@ -320,6 +363,7 @@ export default function App() {
     }));
   };
 
+  // Enviar relato: +5 Moedas e +25 XP
   const lidarComEnvioRelato = (e) => {
     e.preventDefault();
     if (!novoTextoRelato.trim()) {
@@ -336,7 +380,7 @@ export default function App() {
       linha: novaLinhaRelato,
       tipo: pcdAcessivel ? `♿ PCD: ${novoTipoRelato}` : novoTipoRelato,
       texto: novoTextoRelato,
-      autor: novoAutorRelato.trim() || "Cidadão Curitibano",
+      autor: usuarioLogado?.nome || "Cidadão Curitibano",
       votos: 1
     };
 
@@ -437,6 +481,86 @@ export default function App() {
     mostrarToast(`📞 Conectando chamada segura à central ${contato.name}...`);
   };
 
+  // Lógica de Login e Criação de Contas Virtuais
+  const lidarComLogin = (e) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginSenha.trim()) {
+      mostrarToast("⚠️ Preencha todos os campos para autenticar.", "warning");
+      return;
+    }
+
+    // Procura na lista local de usuários salvos no localStorage
+    const usuariosSalvos = JSON.parse(localStorage.getItem('pimac_registered_users') || '[]');
+    const userExistente = usuariosSalvos.find(u => u.email === loginEmail.trim() && u.senha === loginSenha);
+
+    if (userExistente) {
+      setUsuarioLogado(userExistente);
+      localStorage.setItem('pimac_user_session_cwb', JSON.stringify(userExistente));
+      mostrarToast(`🔑 Bem-vindo de volta, Auditor ${userExistente.nome}!`);
+    } else if (loginEmail === "sprint@urbs.pr.gov.br" && loginSenha === "cwb123") {
+      // Login estático administrativo para pitches diretos
+      const adminUser = { nome: "Apresentador URBS", email: "sprint@urbs.pr.gov.br", cartao: "URBS-8822" };
+      setUsuarioLogado(adminUser);
+      localStorage.setItem('pimac_user_session_cwb', JSON.stringify(adminUser));
+      mostrarToast("🚀 Modo Apresentador ativado de forma segura!");
+    } else {
+      mostrarToast("❌ Credenciais incorretas ou conta inexistente.", "warning");
+    }
+  };
+
+  const lidarComCadastro = (e) => {
+    e.preventDefault();
+    if (!regNome.trim() || !regEmail.trim() || !regSenha.trim()) {
+      mostrarToast("⚠️ Todos os campos obrigatórios devem ser preenchidos.", "warning");
+      return;
+    }
+
+    const novosUsuarios = JSON.parse(localStorage.getItem('pimac_registered_users') || '[]');
+    if (novosUsuarios.some(u => u.email === regEmail.trim())) {
+      mostrarToast("❌ Este e-mail já está cadastrado em nossa central cívica.", "warning");
+      return;
+    }
+
+    const novoUser = {
+      nome: regNome.trim(),
+      email: regEmail.trim(),
+      senha: regSenha,
+      cartao: regCartao.trim() || "Isento/Não Cadastrado"
+    };
+
+    novosUsuarios.push(novoUser);
+    localStorage.setItem('pimac_registered_users', JSON.stringify(novosUsuarios));
+    
+    // Login automático pós cadastro
+    setUsuarioLogado(novoUser);
+    localStorage.setItem('pimac_user_session_cwb', JSON.stringify(novoUser));
+    
+    mostrarToast("🎉 Cadastro realizado com sucesso! Auditoria ativa.");
+    setRegNome('');
+    setRegEmail('');
+    setRegSenha('');
+    setRegCartao('');
+  };
+
+  const fazerLogout = () => {
+    localStorage.removeItem('pimac_user_session_cwb');
+    setUsuarioLogado(null);
+    setActiveSection('menu');
+    mostrarToast("🚪 Sessão de auditoria encerrada com segurança.");
+  };
+
+  // Login de Demonstração Rápida (Para o seu pitch de vendas!)
+  const ativarModoApresentador = () => {
+    const defaultUser = {
+      nome: "Demonstração URBS",
+      email: "pitch@curitiba.pr.gov.br",
+      cartao: "URBS-9911-CWB"
+    };
+    setUsuarioLogado(defaultUser);
+    localStorage.setItem('pimac_user_session_cwb', JSON.stringify(defaultUser));
+    mostrarToast("🚀 Login Rápido efetuado! Pronto para a apresentação.");
+  };
+
   const limparBancoDeDados = () => {
     localStorage.clear();
     setLinhas(CIDADES_DATA["Curitiba/PR"].linhas);
@@ -446,6 +570,7 @@ export default function App() {
     ]);
     setUserProfile({ nivel: 1, xp: 20, moedas: 120, medalhas: [] });
     setCuponsResgatados([]);
+    setUsuarioLogado(null);
     setActiveSection('menu');
     mostrarToast("🧹 Base de dados local completamente restaurada.");
   };
@@ -474,12 +599,11 @@ export default function App() {
     }, 1000);
   };
 
-  // Interpolador de coordenadas reais de Lat/Lng para os ônibus móveis
   const calcularPosicaoOnibus = (rota, ticks) => {
     if (!rota || rota.length === 0) return [-25.4419, -49.2733];
     const index = Math.floor((ticks / 100) * (rota.length - 1));
     const nextIndex = (index + 1) % rota.length;
-    const interpolado = (ticks / 100) * (rota.length - 1) - index;
+    const interpolado = (mapTicks / 100) * (rota.length - 1) - index;
 
     const lat = rota[index][0] + (rota[nextIndex][0] - rota[index][0]) * interpolado;
     const lng = rota[index][1] + (rota[nextIndex][1] - rota[index][1]) * interpolado;
@@ -492,6 +616,154 @@ export default function App() {
 
   const totalCo2Evitado = (alertas.length * 5.2) + (userProfile.nivel * 15);
   const arvoresEquivalentes = Math.floor(totalCo2Evitado / 14);
+
+  // Se o usuário NÃO estiver autenticado, mostramos a belíssima tela de Login/Cadastro
+  if (!usuarioLogado) {
+    return (
+      <div className="min-h-screen bg-black text-slate-100 font-sans p-4 md:p-6 flex flex-col justify-center items-center select-none">
+        <div className="max-w-md w-full bg-neutral-950 border border-neutral-900 rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(0,135,81,0.15)] relative overflow-hidden">
+          
+          {/* Luzes neon de ambientação */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full filter blur-3xl pointer-events-none"></div>
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full filter blur-3xl pointer-events-none"></div>
+
+          {/* Cabeçalho da Identidade Visual */}
+          <div className="text-center mb-8 relative z-10">
+            <svg viewBox="0 0 1000 700" className="w-24 h-auto mx-auto rounded-lg shadow-md border border-neutral-900 mb-4">
+              <rect width="1000" height="700" fill="#008751" />
+              <polygon points="0,580 1000,120 1000,0 0,460" fill="#FFFFFF" />
+              <circle cx="500" cy="350" r="150" fill="#002A8F" />
+              <polygon points="500,270 507,290 528,290 511,303 518,323 500,310 482,323 489,303 472,290 493,290" fill="#FFFFFF" />
+              <circle cx="440" cy="350" r="7" fill="#FFFFFF" />
+              <circle cx="560" cy="350" r="7" fill="#FFFFFF" />
+              <circle cx="500" cy="420" r="7" fill="#FFFFFF" />
+              <circle cx="500" cy="380" r="5" fill="#FFFFFF" />
+              <path d="M 330 350 C 330 450, 430 500, 500 500" stroke="#FFCD00" strokeWidth="6" fill="none" />
+              <path d="M 670 350 C 670 450, 570 500, 500 500" stroke="#FFCD00" strokeWidth="6" fill="none" />
+            </svg>
+            <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-500 glow-text-emerald">PIMAC</h1>
+            <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold mt-1">Plataforma Cívica de Auditoria • URBS Curitiba</p>
+          </div>
+
+          {/* Troca de abas internas */}
+          <div className="flex bg-neutral-900/50 p-1 rounded-xl mb-6 relative z-10 border border-neutral-800">
+            <button 
+              onClick={() => setAuthMode('login')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${authMode === 'login' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              Entrar
+            </button>
+            <button 
+              onClick={() => setAuthMode('register')}
+              className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${authMode === 'register' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
+            >
+              Registrar-se
+            </button>
+          </div>
+
+          {/* FORMULÁRIO DE LOGIN */}
+          {authMode === 'login' && (
+            <form onSubmit={lidarComLogin} className="space-y-4 relative z-10 animate-fadeIn">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">E-mail Cadastrado</label>
+                <input 
+                  type="email" 
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="exemplo@urbs.pr.gov.br"
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Senha de Acesso</label>
+                <input 
+                  type="password" 
+                  value={loginSenha}
+                  onChange={(e) => setLoginSenha(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <button 
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer"
+              >
+                Entrar no Painel Cívico
+              </button>
+            </form>
+          )}
+
+          {/* FORMULÁRIO DE CADASTRO */}
+          {authMode === 'register' && (
+            <form onSubmit={lidarComCadastro} className="space-y-4 relative z-10 animate-fadeIn">
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Nome Completo</label>
+                <input 
+                  type="text" 
+                  value={regNome}
+                  onChange={(e) => setRegNome(e.target.value)}
+                  placeholder="Seu nome completo"
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">E-mail Oficial</label>
+                <input 
+                  type="email" 
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="exemplo@gmail.com"
+                  className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Senha</label>
+                  <input 
+                    type="password" 
+                    value={regSenha}
+                    onChange={(e) => setRegSenha(e.target.value)}
+                    placeholder="Mín. 6 dígitos"
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Cartão URBS (Opcional)</label>
+                  <input 
+                    type="text" 
+                    value={regCartao}
+                    onChange={(e) => setRegCartao(e.target.value)}
+                    placeholder="Ex: CWB-123"
+                    className="w-full bg-black border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <button 
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl transition cursor-pointer"
+              >
+                Criar Conta de Auditor
+              </button>
+            </form>
+          )}
+
+          {/* BOTÃO EXCLUSIVO: MODO APRESENTADOR (PULAR LOGIN NA APRESENTAÇÃO) */}
+          <div className="mt-8 pt-6 border-t border-neutral-900 relative z-10">
+            <button 
+              onClick={ativarModoApresentador}
+              className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 text-emerald-400 hover:text-emerald-300 border border-neutral-800 text-[10px] font-bold uppercase tracking-widest rounded-xl transition cursor-pointer"
+            >
+              🚀 Modo Apresentação Rápida (Pular Login)
+            </button>
+          </div>
+
+        </div>
+        <button onClick={limparBancoDeDados} className="mt-6 text-[9px] text-slate-600 hover:text-slate-400 underline cursor-pointer">
+          Repor base de dados de demonstração
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-slate-100 font-sans p-4 md:p-6 selection:bg-emerald-500 selection:text-slate-950">
@@ -604,6 +876,12 @@ export default function App() {
             <div className="text-xs font-bold text-slate-300">
               Nível {userProfile.nivel} • {userProfile.moedas} Mob
             </div>
+            <button 
+              onClick={fazerLogout}
+              className="text-xs font-bold text-rose-500 hover:text-rose-400 transition"
+            >
+              Logout 🚪
+            </button>
           </div>
         </header>
       )}
@@ -646,7 +924,12 @@ export default function App() {
                 {userProfile.nivel}
               </div>
               <div>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Perfil do Auditor</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Auditor: {usuarioLogado.nome}</p>
+                  {usuarioLogado.cartao !== "Isento/Não Cadastrado" && (
+                    <span className="text-[8px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1 py-0.2 rounded font-mono font-bold">{usuarioLogado.cartao}</span>
+                  )}
+                </div>
                 <div className="flex items-center space-x-2 w-36 mt-1">
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                     <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${userProfile.xp}%` }}></div>
@@ -674,8 +957,10 @@ export default function App() {
             </div>
           </section>
 
+          {/* GRELHA HARMÓNICA DE 8 BOTÕES (2 LINHAS DE 4 EM DESKTOP) */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
             
+            {/* BOTÃO 1 - AZUL */}
             <button 
               onClick={() => setActiveSection('mapa')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -690,6 +975,7 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 2 - VERDE */}
             <button 
               onClick={() => setActiveSection('frota')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -704,6 +990,7 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 3 - AZUL */}
             <button 
               onClick={() => setActiveSection('denuncias')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -718,6 +1005,7 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 4 - VERDE */}
             <button 
               onClick={() => setActiveSection('terminais')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -728,13 +1016,14 @@ export default function App() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Terminais da URBS</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Endereços completos e fluxos integrados de Curitiba.</p>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Endereços completos e fluxos de todos os 22 terminais.</p>
               </div>
             </button>
 
+            {/* BOTÃO 5 - AZUL */}
             <button 
               onClick={() => setActiveSection('ia_chat')}
-              className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
+              className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg animate-float"
             >
               <div className="flex justify-between items-center">
                 <span className="text-3xl group-hover:scale-110 transition-transform">🤖</span>
@@ -746,6 +1035,7 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 6 - VERDE */}
             <button 
               onClick={() => setActiveSection('loja')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -760,9 +1050,10 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 7 - AZUL */}
             <button 
               onClick={() => setActiveSection('contatos')}
-              className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
+              className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg animate-float"
             >
               <div className="flex justify-between items-center">
                 <span className="text-3xl group-hover:scale-110 transition-transform">📞</span>
@@ -774,6 +1065,7 @@ export default function App() {
               </div>
             </button>
 
+            {/* BOTÃO 8 - VERDE */}
             <button 
               onClick={() => setActiveSection('ambiental')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -789,6 +1081,16 @@ export default function App() {
             </button>
 
           </section>
+
+          {/* Botão administrativo visível no rodapé do menu principal */}
+          <div className="text-center mt-12 relative z-10">
+            <button 
+              onClick={fazerLogout}
+              className="px-6 py-2.5 bg-neutral-950 border border-neutral-900 text-rose-500 hover:text-rose-400 font-extrabold text-xs uppercase tracking-widest rounded-xl transition duration-300 cursor-pointer"
+            >
+              Sair da Conta de Auditor 🚪
+            </button>
+          </div>
         </div>
       )}
 
@@ -957,6 +1259,7 @@ export default function App() {
                         value={novoAutorRelato}
                         onChange={(e) => setNovoAutorRelato(e.target.value)}
                         className="w-full bg-black border border-neutral-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none placeholder:text-slate-700"
+                        disabled={true} // Forçado para manter o nome de auditor cadastrado no login!
                       />
                     </div>
                   </div>
@@ -1018,42 +1321,53 @@ export default function App() {
             </div>
           )}
 
-          {/* ECRÃ 4: TERMINAIS DE INTEGRAÇÃO */}
+          {/* ECRÃ 4: TERMINAIS DE INTEGRAÇÃO (TODOS OS 22!) */}
           {activeSection === 'terminais' && (
             <div className="bg-neutral-900/30 border border-neutral-900 p-6 rounded-2xl shadow-xl">
-              <div className="mb-6">
-                <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">🏫 Terminais de Integração Ativos (Curitiba)</h2>
-                <p className="text-xs text-slate-500">Consulte os endereços completos, CEPs reais e fluxo de cada terminal.</p>
+              <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">🏫 Terminais de Integração Ativos (Curitiba)</h2>
+                  <p className="text-xs text-slate-500">Exibindo os 22 terminais urbanos reais com fluxo, linhas e localizações.</p>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Pesquisar terminal..."
+                  value={filtroPesquisa}
+                  onChange={(e) => setFiltroPesquisa(e.target.value)}
+                  className="bg-black border border-neutral-800 rounded-xl px-4 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(CIDADES_DATA[selectedCity]?.terminais || []).map(terminal => (
-                  <div key={terminal.id} className="bg-neutral-950 border border-neutral-850 p-4 rounded-xl flex flex-col justify-between hover:border-emerald-500/30 transition">
-                    <div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-3xl">{terminal.icone}</span>
-                        <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
-                          terminal.status === 'Sobrecarga' ? 'bg-rose-950 text-rose-400 border border-rose-900/30' : 'bg-emerald-950 text-emerald-400 border border-emerald-900/30'
-                        }`}>
-                          {terminal.status}
-                        </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto pr-2">
+                {CIDADES_DATA["Curitiba/PR"].terminais
+                  .filter(t => t.nome.toLowerCase().includes(filtroPesquisa.toLowerCase()))
+                  .map(terminal => (
+                    <div key={terminal.id} className="bg-neutral-950 border border-neutral-850 p-4 rounded-xl flex flex-col justify-between hover:border-emerald-500/30 transition">
+                      <div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-3xl">{terminal.icone}</span>
+                          <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase ${
+                            terminal.status === 'Sobrecarga' ? 'bg-rose-950 text-rose-400' : 'bg-emerald-950 text-emerald-400'
+                          }`}>
+                            {terminal.status}
+                          </span>
+                        </div>
+                        <h3 className="text-xs font-bold text-slate-200 mt-4">{terminal.nome}</h3>
+                        <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{terminal.localizacao}</p>
                       </div>
-                      <h3 className="text-xs font-bold text-slate-200 mt-4">{terminal.nome}</h3>
-                      <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{terminal.localizacao}</p>
-                    </div>
 
-                    <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between text-[10px]">
-                      <div>
-                        <span className="text-slate-500 block font-bold">Fluxo Estimado</span>
-                        <span className="font-semibold text-slate-300">{terminal.fluxo}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500 block font-bold">Linhas Ativas</span>
-                        <span className="font-semibold text-slate-300">{terminal.linhasAtendidas} rotas</span>
+                      <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between text-[10px]">
+                        <div>
+                          <span className="text-slate-500 block font-bold">Fluxo Estimado</span>
+                          <span className="font-semibold text-slate-300">{terminal.fluxo}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block font-bold">Linhas Ativas</span>
+                          <span className="font-semibold text-slate-300">{terminal.linhasAtendidas} rotas</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -1149,7 +1463,7 @@ export default function App() {
                         <p className="text-[10px] text-slate-500">{cupom.parceiro}</p>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between items-center">
+                      <div className="mt-4 pt-3 border-t border-neutral-850 flex justify-between items-center">
                         <span className="text-xs font-mono font-bold text-amber-400">{cupom.custo} Mob</span>
                         {jaResgatou ? (
                           <span className="text-[10px] text-slate-500 font-bold">Resgatado ✓</span>
@@ -1190,7 +1504,7 @@ export default function App() {
           {/* ECRÃ 7: CONTATOS ÚTEIS */}
           {activeSection === 'contatos' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {CIDADES_DATA[selectedCity]?.contatos.map(contato => (
+              {(CIDADES_DATA[selectedCity]?.contatos || []).map(contato => (
                 <div key={contato.id} className="bg-neutral-900/30 border border-neutral-900 p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{contato.icone}</span>
