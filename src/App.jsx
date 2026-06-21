@@ -1,131 +1,307 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-// Dados iniciais simulados para as linhas de autocarros de Campo Grande/MS
-const dadosIniciaisLinhas = [
-  { id: "080", nome: "Terminal Bandeirantes / Aero Rancho", pontualidade: 62, atrasoMedio: 24, status: "Crítico", passageirosHora: 450, velocidade: 22, placa: "PIM-0801", rotaX: [20, 45, 70, 90], rotaY: [30, 40, 50, 75] },
-  { id: "070", nome: "Terminal Bandeirantes / Gen. Osório", pontualidade: 88, atrasoMedio: 7, status: "Normal", passageirosHora: 310, velocidade: 40, placa: "PIM-0702", rotaX: [15, 30, 55, 80], rotaY: [70, 60, 50, 20] },
-  { id: "020", nome: "Terminal Central / Terminal Guaicurus", pontualidade: 71, atrasoMedio: 16, status: "Atenção", passageirosHora: 520, velocidade: 31, placa: "PIM-0203", rotaX: [10, 40, 60, 85], rotaY: [20, 45, 55, 80] },
-  { id: "051", nome: "Shopping / Bandeirantes", pontualidade: 94, atrasoMedio: 4, status: "Excelente", passageirosHora: 180, velocidade: 45, placa: "PIM-0514", rotaX: [85, 65, 45, 20], rotaY: [15, 35, 45, 60] },
-  { id: "081", nome: "Terminal Bandeirantes / Nova Bahia", pontualidade: 55, atrasoMedio: 29, status: "Crítico", passageirosHora: 380, velocidade: 18, placa: "PIM-0815", rotaX: [30, 50, 70, 95], rotaY: [85, 65, 45, 25] },
-  { id: "030", nome: "Terminal Hercules Maymone / Centro", pontualidade: 82, atrasoMedio: 9, status: "Normal", passageirosHora: 290, velocidade: 35, placa: "PIM-0306", rotaX: [50, 55, 60, 65], rotaY: [10, 35, 60, 90] }
-];
+// Dados baseados em linhas reais da URBS (Curitiba/PR) com coordenadas de Latitude e Longitude REAIS
+const CIDADES_DATA = {
+  "Curitiba/PR": {
+    linhas: [
+      { 
+        id: "203", 
+        nome: "Santa Cândida / Capão Raso", 
+        pontualidade: 94, 
+        atrasoMedio: 3, 
+        status: "Excelente", 
+        passageirosHora: 1100, 
+        velocidade: 42, 
+        placa: "PR-2030", 
+        rota: [
+          [-25.3789, -49.2224], // Terminal Santa Cândida
+          [-25.4065, -49.2526], // Terminal Cabral
+          [-25.4316, -49.2646], // Terminal Guadalupe
+          [-25.4761, -49.2894], // Terminal Portão
+          [-25.5133, -49.2974], // Terminal Capão Raso
+          [-25.5312, -49.3087]  // Terminal Pinheirinho
+        ] 
+      },
+      { 
+        id: "304", 
+        nome: "Centenário / Campo Comprido", 
+        pontualidade: 88, 
+        atrasoMedio: 6, 
+        status: "Normal", 
+        passageirosHora: 850, 
+        velocidade: 36, 
+        placa: "PR-3040", 
+        rota: [
+          [-25.4712, -49.2011], // Centenário
+          [-25.4316, -49.2646], // Guadalupe
+          [-25.4358, -49.3069], // Campina do Siqueira
+          [-25.4419, -49.3444]  // Campo Comprido
+        ] 
+      },
+      { 
+        id: "502", 
+        nome: "Circular Sul (Horário)", 
+        pontualidade: 76, 
+        atrasoMedio: 14, 
+        status: "Atenção", 
+        passageirosHora: 950, 
+        velocidade: 28, 
+        placa: "PR-5020", 
+        rota: [
+          [-25.4316, -49.2646], // Guadalupe
+          [-25.4812, -49.2458], // Hauer
+          [-25.5312, -49.3087], // Pinheirinho
+          [-25.4761, -49.2894], // Portão
+          [-25.4316, -49.2646]  // Volta ao Guadalupe
+        ] 
+      },
+      { 
+        id: "602", 
+        nome: "Sítio Cercado (Expresso)", 
+        pontualidade: 64, 
+        atrasoMedio: 22, 
+        status: "Crítico", 
+        passageirosHora: 720, 
+        velocidade: 24, 
+        placa: "PR-6020", 
+        rota: [
+          [-25.5392, -49.2678], // Sítio Cercado
+          [-25.4812, -49.2458], // Hauer
+          [-25.4316, -49.2646]  // Guadalupe
+        ] 
+      }
+    ],
+    terminais: [
+      { id: "t1", nome: "Terminal Capão Raso", localizacao: "Av. Winston Churchill, s/n - Capão Raso, Curitiba - PR, 81130-000", fluxo: "Muito Alto", linhasAtendidas: 24, status: "Operacional", icone: "🏫", coordenadas: [-25.5133, -49.2974] },
+      { id: "t2", nome: "Terminal Cabral", localizacao: "Av. Paraná, s/n - Cabral, Curitiba - PR, 80035-130", fluxo: "Alto", linhasAtendidas: 19, status: "Operacional", icone: "🏫", coordenadas: [-25.4065, -49.2526] },
+      { id: "t3", nome: "Terminal Pinheirinho", localizacao: "Av. Winston Churchill, s/n - Pinheirinho, Curitiba - PR, 81150-050", fluxo: "Crítico", linhasAtendidas: 31, status: "Sobrecarga", icone: "🏫", coordenadas: [-25.5312, -49.3087] },
+      { id: "t4", nome: "Terminal Portão", localizacao: "Rua João Bettega, s/n - Portão, Curitiba - PR, 81070-000", fluxo: "Muito Alto", linhasAtendidas: 22, status: "Operacional", icone: "🏫", coordenadas: [-25.4761, -49.2894] },
+      { id: "t5", nome: "Terminal Santa Cândida", localizacao: "Av. Paraná, s/n - Santa Cândida, Curitiba - PR, 82640-000", fluxo: "Médio", linhasAtendidas: 15, status: "Operacional", icone: "🏫", coordenadas: [-25.3789, -49.2224] },
+      { id: "t6", nome: "Terminal Campina do Siqueira", localizacao: "Rua Padre Anchieta, s/n - Campina do Siqueira, Curitiba - PR, 80730-000", fluxo: "Alto", linhasAtendidas: 17, status: "Operacional", icone: "🏫", coordenadas: [-25.4358, -49.3069] },
+      { id: "t7", nome: "Terminal Hauer", localizacao: "Av. Marechal Floriano Peixoto, s/n - Hauer, Curitiba - PR, 81630-000", fluxo: "Alto", linhasAtendidas: 18, status: "Manutenção Parcial", icone: "🏫", coordenadas: [-25.4812, -49.2458] },
+      { id: "t8", nome: "Terminal Guadalupe", localizacao: "Rua João Negrão, s/n - Centro, Curitiba - PR, 80010-200", fluxo: "Muito Alto", linhasAtendidas: 26, status: "Operacional", icone: "🏫", coordenadas: [-25.4316, -49.2646] }
+    ],
+    contatos: [
+      { id: "c1", name: "URBS Curitiba (Ouvidoria de Transportes)", tel: "156", desc: "Central de atendimento de trânsito e urbanização", icone: "🌲" },
+      { id: "c2", name: "Guarda Municipal de Curitiba", tel: "153", desc: "Patrulhamento, rondas e apoio em terminais e tubos", icone: "🛡️" }
+    ]
+  }
+};
 
-// Alertas iniciais inseridos de forma colaborativa pela população
-const alertasIniciais = [
-  { id: 1, hora: "12:10", linha: "080", tipo: "Atraso grave", texto: "Avenida Afonso Pena congestionada. O autocarro demorou 25 minutos além do planeado.", autor: "Carlos M.", xpGanho: 15 },
-  { id: 2, hora: "11:55", linha: "020", tipo: "Superlotação", texto: "Superlotado desde a saída do terminal Guaicurus.", autor: "Sandra R.", xpGanho: 15 },
-  { id: 3, hora: "11:30", linha: "081", tipo: "Ar Desligado", texto: "Calor insuportável na linha 081 e janelas travadas.", autor: "Bruno S.", xpGanho: 15 }
-];
-
-// Cupões de parceiros para a gamificação na capital
 const cuponsParceiros = [
-  { id: "cupom1", titulo: "Salgado + Sumo de 200ml", parceiro: "Lanchonete Term. Bandeirantes", custo: 100, icone: "🍔", categoria: "Alimentação", codigo: "PIMAC-LANCHE-CG" },
-  { id: "cupom2", titulo: "10% de Desconto na Cópia/Impressão", parceiro: "Copiadora Central UCDB/UFMS", custo: 150, icone: "📄", categoria: "Serviços", codigo: "PIMAC-COPIA-15" },
-  { id: "cupom3", titulo: "Café Expresso Cortesia", parceiro: "Ponto do Café Afonso Pena", custo: 200, icone: "☕", categoria: "Alimentação", codigo: "PIMAC-CAFE-FREE" },
-  { id: "cupom4", titulo: "Passe Unitário de Integração", parceiro: "Consórcio Guaicurus (Simulado)", custo: 400, icone: "🚌", categoria: "Transporte", codigo: "PIMAC-PASSE-VIP" }
-];
-
-// Contactos urgentes integrados
-const contatosEmergencia = [
-  { id: "1", nome: "AGETRAN (Trânsito e Transporte)", tel: "118", desc: "Fiscalização e sinalização de vias urbanas de Campo Grande", icone: "🚧" },
-  { id: "2", nome: "Consórcio Guaicurus (Ouvidoria)", tel: "0800 647 0060", desc: "Reclamações diretas sobre frotas e atrasos graves", icone: "📞" },
-  { id: "3", nome: "Polícia Militar do MS", tel: "190", desc: "Segurança e ocorrências de urgência em terminais", icone: "🚓" },
-  { id: "4", nome: "Guarda Civil Metropolitana", tel: "153", desc: "Apoio, rondas e patrulhamento de património público", icone: "🛡️" }
-];
-
-// Terminais de Integração de Campo Grande/MS (Oitavo Botão!)
-const terminaisIntegracao = [
-  { id: "t1", nome: "Terminal Bandeirantes", localizacao: "Av. Bandeirantes", fluxo: "Muito Alto", linhasAtendidas: 14, status: "Operacional", icone: "🏫" },
-  { id: "t2", nome: "Terminal Aero Rancho", localizacao: "Av. Thyrson de Almeida", fluxo: "Crítico", linhasAtendidas: 18, status: "Sobrecarga", icone: "🏫" },
-  { id: "t3", nome: "Terminal Guaicurus", localizacao: "Av. Gury Marques", fluxo: "Alto", linhasAtendidas: 15, status: "Operacional", icone: "🏫" },
-  { id: "t4", nome: "Terminal General Osório", localizacao: "Av. Coronel Antonino", fluxo: "Alto", linhasAtendidas: 16, status: "Operacional", icone: "🏫" },
-  { id: "t5", nome: "Terminal Nova Bahia", localizacao: "Av. Cônsul Assaf Trad", fluxo: "Médio", linhasAtendidas: 11, status: "Operacional", icone: "🏫" },
-  { id: "t6", nome: "Terminal Morenão", localizacao: "Av. Costa e Silva", fluxo: "Muito Alto", linhasAtendidas: 13, status: "Manutenção Parcial", icone: "🏫" },
-  { id: "t7", nome: "Terminal Júlio de Castilho", localizacao: "Av. Júlio de Castilho", fluxo: "Médio", linhasAtendidas: 10, status: "Operacional", icone: "🏫" },
-  { id: "t8", nome: "Terminal Hércules Maymone", localizacao: "Rua Joaquim Murtinho", fluxo: "Baixo", linhasAtendidas: 8, status: "Operacional", icone: "🏫" }
+  { id: "cupom1", titulo: "Café + Pão de Queijo", parceiro: "Rede Estação Café (Tubo Estação)", custo: 100, icone: "☕", categoria: "Alimentação", codigo: "PIMAC-CAFE-CWB" },
+  { id: "cupom2", titulo: "Salgado Integral + Suco Nat.", parceiro: "Lanchonete Integração Capão Raso", custo: 180, icone: "🍔", categoria: "Alimentação", codigo: "PIMAC-LANCHE-CWB" },
+  { id: "cupom3", titulo: "15% Desconto em Copiadora", parceiro: "Livraria & Copiadora Portão", custo: 250, icone: "📄", categoria: "Serviços", codigo: "PIMAC-COPIA-CWB" },
+  { id: "cupom4", titulo: "Passe Unitário de Integração", parceiro: "URBS Conveniada (Simulado)", custo: 500, icone: "🚌", categoria: "Transporte", codigo: "PIMAC-PASSE-CWB" }
 ];
 
 export default function App() {
-  // Estados para gerir a aplicação com validação inteligente de dados antigos
+  const [selectedCity] = useState("Curitiba/PR");
+
+  // Estados com persistência local
   const [linhas, setLinhas] = useState(() => {
-    const salvas = localStorage.getItem('pimac_linhas');
+    const salvas = localStorage.getItem('pimac_linhas_cwb_v3');
     if (salvas) {
       try {
-        const dadosParseados = JSON.parse(salvas);
-        if (Array.isArray(dadosParseados) && dadosParseados.length > 0 && dadosParseados[0].rotaX) {
-          return dadosParseados;
-        }
-      } catch (e) {
-        console.error("Erro ao carregar linhas:", e);
-      }
+        const parseadas = JSON.parse(salvas);
+        if (Array.isArray(parseadas) && parseadas.length > 0 && parseadas[0].rota) return parseadas;
+      } catch (e) { console.error(e); }
     }
-    return dadosIniciaisLinhas;
+    return CIDADES_DATA["Curitiba/PR"].linhas;
   });
 
   const [alertas, setAlertas] = useState(() => {
-    const salvos = localStorage.getItem('pimac_alertas');
+    const salvos = localStorage.getItem('pimac_alertas_cwb_v3');
     if (salvos) {
       try {
-        const dadosParseados = JSON.parse(salvos);
-        if (Array.isArray(dadosParseados)) return dadosParseados;
-      } catch (e) {
-        console.error("Erro ao carregar alertas:", e);
-      }
+        const parseados = JSON.parse(salvos);
+        if (Array.isArray(parseados)) return parseados;
+      } catch (e) { console.error(e); }
     }
-    return alertasIniciais;
+    return [
+      { id: 1, hora: "12:10", linha: "502", tipo: "Atraso grave", texto: "Canaleta da Avenida Sete de Setembro congestionada. Ligeirão preso no fluxo de canaleta.", autor: "Matheus K.", votos: 5 },
+      { id: 2, hora: "11:55", linha: "203", tipo: "Superlotação", texto: "Biarticulado superlotado saindo do Terminal Cabral no horário de pico.", autor: "Fernanda M.", votos: 3 }
+    ];
   });
 
   const [userProfile, setUserProfile] = useState(() => {
-    const salvo = localStorage.getItem('pimac_profile');
+    const salvo = localStorage.getItem('pimac_profile_cwb_v3');
     if (salvo) {
-      try {
-        return JSON.parse(salvo);
-      } catch (e) {
-        console.error("Erro ao carregar perfil:", e);
-      }
+      try { return JSON.parse(salvo); } catch (e) { console.error(e); }
     }
-    return { nivel: 1, xp: 20, moedas: 120 };
+    return { nivel: 1, xp: 20, moedas: 120, medalhas: [] };
   });
 
   const [cuponsResgatados, setCuponsResgatados] = useState(() => {
-    const salvos = localStorage.getItem('pimac_cupons');
+    const salvos = localStorage.getItem('pimac_cupons_cwb_v3');
     if (salvos) {
-      try {
-        return JSON.parse(salvos);
-      } catch (e) {
-        console.error("Erro ao carregar cupons:", e);
-      }
+      try { return JSON.parse(salvos); } catch (e) { console.error(e); }
     }
     return [];
   });
 
-  const [activeSection, setActiveSection] = useState('menu'); // Valor padrão 'menu' exibe a tela inicial de botões
+  const [activeSection, setActiveSection] = useState('menu'); 
   const [clima, setClima] = useState('sunny'); 
   const [filtroPesquisa, setFiltroPesquisa] = useState('');
-  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0] || dadosIniciaisLinhas[0]);
+  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0] || CIDADES_DATA["Curitiba/PR"].linhas[0]);
   const [mapTicks, setMapTicks] = useState(0); 
   const [selectedBus, setSelectedBus] = useState(null);
   const [chamandoContato, setChamandoContato] = useState(null);
+  const [cupomParaResgate, setCupomParaResgate] = useState(null);
 
   // Estados do Formulário de Denúncias
-  const [novaLinhaRelato, setNovaLinhaRelato] = useState('080');
+  const [novaLinhaRelato, setNovaLinhaRelato] = useState('203');
   const [novoTipoRelato, setNovoTipoRelato] = useState('Atraso grave');
   const [novoTextoRelato, setNovoTextoRelato] = useState('');
   const [novoAutorRelato, setNovoAutorRelato] = useState('');
+  const [pcdAcessivel, setPcdAcessivel] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Controle de camadas do Google Maps no Leaflet
+  const [mapType, setMapType] = useState('roadmap'); // 'roadmap' ou 'satellite'
+
+  // Referências para o mapa Leaflet
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
+  const busMarkersRef = useRef({});
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
+
+  // Estados da PIMAC IA
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', text: 'Olá, sou a PIMAC Curitiba IA! 🤖 Sou sua assistente virtual de mobilidade urbana da Grande Curitiba. Como posso te orientar sobre o sistema de canaletas, biarticulados, tubos e seus direitos hoje?' }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+
+  // Carregamento assíncrono e dinâmico da biblioteca do Google Maps via Leaflet CDN
   useEffect(() => {
-    const timer = setInterval(() => {
-      setMapTicks((prev) => (prev >= 100 ? 0 : prev + 0.4));
-    }, 100);
-    return () => clearInterval(timer);
+    if (!document.getElementById('leaflet-css')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById('leaflet-js')) {
+      const script = document.createElement('script');
+      script.id = 'leaflet-js';
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => setLeafletLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setLeafletLoaded(true);
+    }
   }, []);
 
+  // Inicialização e gerenciamento do mapa real Leaflet
   useEffect(() => {
-    localStorage.setItem('pimac_linhas', JSON.stringify(linhas));
-    localStorage.setItem('pimac_alertas', JSON.stringify(alertas));
-    localStorage.setItem('pimac_profile', JSON.stringify(userProfile));
-    localStorage.setItem('pimac_cupons', JSON.stringify(cuponsResgatados));
+    if (!leafletLoaded || !mapContainerRef.current || activeSection !== 'mapa') return;
+
+    const L = window.L;
+    if (!L) return;
+
+    // Se já houver um mapa instanciado, vamos destruí-lo antes de recriar
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+
+    // Instancia o mapa centrado em Curitiba
+    const curitibaCenter = [-25.4419, -49.2733];
+    const map = L.map(mapContainerRef.current, {
+      center: curitibaCenter,
+      zoom: 12,
+      zoomControl: true,
+      attributionControl: false
+    });
+
+    mapInstanceRef.current = map;
+
+    // Configura a camada oficial do Google Maps de forma direta
+    const googleRoadmapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+    const googleSatelliteUrl = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+    
+    const tileLayer = L.tileLayer(mapType === 'roadmap' ? googleRoadmapUrl : googleSatelliteUrl, {
+      maxZoom: 20
+    }).addTo(map);
+
+    tileLayerRef.current = tileLayer;
+
+    // Adiciona marcadores para os terminais reais de Curitiba
+    CIDADES_DATA["Curitiba/PR"].terminais.forEach(t => {
+      const terminalIcon = L.divIcon({
+        html: `<div class="bg-blue-600 border-2 border-white rounded-lg p-1.5 shadow-lg flex items-center justify-center text-xs w-6 h-6 transform hover:scale-115 transition-all">🏫</div>`,
+        className: 'custom-terminal-icon',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      L.marker(t.coordenadas, { icon: terminalIcon })
+        .addTo(map)
+        .bindPopup(`<strong class="text-slate-900">${t.nome}</strong><br/><span class="text-xs text-slate-500">${t.localizacao}</span>`);
+    });
+
+    // Inicializa os marcadores dos autocarros em tempo real
+    const markers = {};
+    linhas.forEach(linha => {
+      const pos = calcularPosicaoOnibus(linha.rota, mapTicks);
+      const colorClass = linha.status === 'Crítico' ? 'bg-rose-500' : (linha.status === 'Atenção' ? 'bg-amber-500' : 'bg-emerald-500');
+      
+      const busIcon = L.divIcon({
+        html: `<div class="w-8 h-8 rounded-full border-2 border-slate-950 flex items-center justify-center text-[10px] font-black text-black shadow-lg cursor-pointer ${colorClass}">${linha.id}</div>`,
+        className: 'custom-bus-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const marker = L.marker(pos, { icon: busIcon })
+        .addTo(map)
+        .bindPopup(`<strong>Linha #${linha.id}</strong><br/>${linha.nome}`);
+      
+      marker.on('click', () => {
+        const etaSimulada = Math.max(1, Math.round((100 - (mapTicks % 25)) / 4));
+        setSelectedBus({ ...linha, eta: etaSimulada });
+      });
+
+      markers[linha.id] = marker;
+    });
+
+    busMarkersRef.current = markers;
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [leafletLoaded, activeSection]);
+
+  // Atualização das camadas do Google Maps de forma reativa
+  useEffect(() => {
+    if (!tileLayerRef.current) return;
+    const googleRoadmapUrl = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+    const googleSatelliteUrl = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+    tileLayerRef.current.setUrl(mapType === 'roadmap' ? googleRoadmapUrl : googleSatelliteUrl);
+  }, [mapType]);
+
+  // Movimento síncrono dos marcadores de autocarro com o mapTicks
+  useEffect(() => {
+    if (activeSection !== 'mapa') return;
+    linhas.forEach(linha => {
+      const marker = busMarkersRef.current[linha.id];
+      if (marker) {
+        const pos = calcularPosicaoOnibus(linha.rota, mapTicks);
+        marker.setLatLng(pos);
+      }
+    });
+  }, [mapTicks, activeSection]);
+
+  useEffect(() => {
+    localStorage.setItem('pimac_linhas_cwb_v3', JSON.stringify(linhas));
+    localStorage.setItem('pimac_alertas_cwb_v3', JSON.stringify(alertas));
+    localStorage.setItem('pimac_profile_cwb_v3', JSON.stringify(userProfile));
+    localStorage.setItem('pimac_cupons_cwb_v3', JSON.stringify(cuponsResgatados));
   }, [linhas, alertas, userProfile, cuponsResgatados]);
 
   const mostrarToast = (msg, tipo = 'success') => {
@@ -133,10 +309,21 @@ export default function App() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const upvotarAlerta = (alertaId) => {
+    setAlertas(prev => prev.map(a => {
+      if (a.id === alertaId) {
+        setUserProfile(prof => ({ ...prof, moedas: prof.moedas + 2 }));
+        mostrarToast("👍 Relato validado! Ganhou +2 Moedas (Mob).");
+        return { ...a, votos: (a.votos || 0) + 1 };
+      }
+      return a;
+    }));
+  };
+
   const lidarComEnvioRelato = (e) => {
     e.preventDefault();
     if (!novoTextoRelato.trim()) {
-      mostrarToast("⚠️ Descreva o ocorrido para registar a denúncia.", "warning");
+      mostrarToast("⚠️ Descreva o ocorrido para enviar a sua auditoria.", "warning");
       return;
     }
 
@@ -147,15 +334,14 @@ export default function App() {
       id: Date.now(),
       hora: horaFormatada,
       linha: novaLinhaRelato,
-      tipo: novoTipoRelato,
+      tipo: pcdAcessivel ? `♿ PCD: ${novoTipoRelato}` : novoTipoRelato,
       texto: novoTextoRelato,
-      autor: novoAutorRelato.trim() || "Cidadão Anónimo",
-      xpGanho: 15
+      autor: novoAutorRelato.trim() || "Cidadão Curitibano",
+      votos: 1
     };
 
     setAlertas([novoAlerta, ...alertas]);
 
-    // Simula impacto no tráfego da linha após denúncia
     setLinhas(prev => prev.map(l => {
       if (l.id === novaLinhaRelato) {
         const novoAtraso = l.atrasoMedio + 5;
@@ -170,25 +356,38 @@ export default function App() {
       return l;
     }));
 
-    // Sistema de Pontuação e Recompensa do Cidadão
     setUserProfile(prev => {
       let novoXp = prev.xp + 25;
       let novoNivel = prev.nivel;
+      let medalhasAtualizadas = [...(prev.medalhas || [])];
+
       if (novoXp >= 100) {
         novoXp -= 100;
         novoNivel += 1;
-        mostrarToast(`🎉 EXCELENTE! Subiu para o Nível ${novoNivel}!`, 'level');
+        mostrarToast(`🎉 ESPETACULAR! Subiu para o Nível ${novoNivel}!`, 'level');
       }
+
+      if (alertas.length >= 4 && !medalhasAtualizadas.includes("Fiscal Curitibano")) {
+        medalhasAtualizadas.push("Fiscal Curitibano");
+        mostrarToast("🏅 Medalha Desbloqueada: 'Fiscal Curitibano' por auditar ativamente!");
+      }
+      if (pcdAcessivel && !medalhasAtualizadas.includes("Guardião da Acessibilidade")) {
+        medalhasAtualizadas.push("Guardião da Acessibilidade");
+        mostrarToast("♿ Medalha Desbloqueada: 'Guardião da Acessibilidade' por auditar tubos e rampas!");
+      }
+
       return {
         nivel: novoNivel,
         xp: novoXp,
-        moedas: prev.moedas + 50
+        moedas: prev.moedas + 5,
+        medalhas: medalhasAtualizadas
       };
     });
 
     setNovoTextoRelato('');
     setNovoAutorRelato('');
-    mostrarToast("✅ Denúncia enviada! Ganhou +25 XP e +50 Moedas!");
+    setPcdAcessivel(false);
+    mostrarToast("✅ Denúncia registrada! Ganhou +25 XP e +5 Moedas!");
   };
 
   const aplicarClima = (novoClima) => {
@@ -196,69 +395,103 @@ export default function App() {
     if (novoClima === 'rainy') {
       setLinhas(prev => prev.map(l => ({
         ...l,
-        atrasoMedio: l.atrasoMedio + 12,
-        pontualidade: Math.max(35, l.pontualidade - 18),
-        velocidade: Math.max(12, l.velocidade - 10),
+        atrasoMedio: l.atrasoMedio + 10,
+        pontualidade: Math.max(35, l.pontualidade - 15),
+        velocidade: Math.max(12, l.velocidade - 8),
         status: "Crítico"
       })));
-      mostrarToast("🌧️ Temporal Ativado: Tráfego lento e atrasos severos nas vias principais!", "info");
+      mostrarToast("🌧️ Clima Curitibano (Chuva/Cerveja): Vias lentas e alertas de geada operacionais!", "info");
     } else if (novoClima === 'pico') {
       setLinhas(prev => prev.map(l => ({
         ...l,
-        passageirosHora: Math.round(l.passageirosHora * 1.5),
-        atrasoMedio: l.atrasoMedio + 6,
-        pontualidade: Math.max(40, l.pontualidade - 10),
+        passageirosHora: Math.round(l.passageirosHora * 1.4),
+        atrasoMedio: l.atrasoMedio + 7,
+        pontualidade: Math.max(40, l.pontualidade - 8),
         status: l.atrasoMedio > 20 ? "Crítico" : "Atenção"
       })));
-      mostrarToast("🚗 Hora de Ponta Ativada: Lotações e procuras máximas registadas!", "info");
+      mostrarToast("🚗 Horário de Pico: Alta demanda de embarque nos tubos centrais!", "info");
     } else {
-      setLinhas(dadosIniciaisLinhas);
-      mostrarToast("☀️ Dia Normal Ativado: Métricas normais restabelecidas.");
+      setLinhas(CIDADES_DATA["Curitiba/PR"].linhas);
+      mostrarToast("☀️ Dia Normal: Condições operacionais restauradas na URBS.");
     }
   };
 
-  const resgatarCupom = (cupom) => {
+  const confirmarResgatarCupom = (cupom) => {
     if (userProfile.moedas < cupom.custo) {
-      mostrarToast("❌ Saldo de moedas insuficiente. Continue a auditar!", "warning");
+      mostrarToast("❌ Saldo de moedas insuficiente. Fiscalize mais frotas!", "warning");
       return;
     }
+    setCupomParaResgate(cupom);
+  };
 
-    setUserProfile(prev => ({ ...prev, moedas: prev.moedas - cupom.custo }));
-    setCuponsResgatados([ { ...cupom, resgatadoEm: new Date().toLocaleDateString('pt-BR') }, ...cuponsResgatados ]);
-    mostrarToast(`🎁 Cupão resgatado! Código: ${cupom.codigo}`);
+  const executarResgate = () => {
+    if (!cupomParaResgate) return;
+    setUserProfile(prev => ({ ...prev, moedas: prev.moedas - cupomParaResgate.custo }));
+    setCuponsResgatados([ { ...cupomParaResgate, resgatadoEm: new Date().toLocaleDateString('pt-BR') }, ...cuponsResgatados ]);
+    mostrarToast(`🎁 Cupom resgatado! Utilize o código: ${cupomParaResgate.codigo}`);
+    setCupomParaResgate(null);
   };
 
   const simularLigacao = (contato) => {
     setChamandoContato(contato);
-    mostrarToast(`📞 A discar para ${contato.nome}...`);
+    mostrarToast(`📞 Conectando chamada segura à central ${contato.name}...`);
   };
 
   const limparBancoDeDados = () => {
     localStorage.clear();
-    setLinhas(dadosIniciaisLinhas);
-    setAlertas(alertasIniciais);
-    setUserProfile({ nivel: 1, xp: 20, moedas: 120 });
+    setLinhas(CIDADES_DATA["Curitiba/PR"].linhas);
+    setAlertas([
+      { id: 1, hora: "12:10", linha: "502", tipo: "Atraso grave", texto: "Canaleta da Avenida Sete de Setembro congestionada. Ligeirão preso no fluxo de canaleta.", autor: "Matheus K.", votos: 5 },
+      { id: 2, hora: "11:55", linha: "203", tipo: "Superlotação", texto: "Biarticulado superlotado saindo do Terminal Cabral no horário de pico.", autor: "Fernanda M.", votos: 3 }
+    ]);
+    setUserProfile({ nivel: 1, xp: 20, moedas: 120, medalhas: [] });
     setCuponsResgatados([]);
     setActiveSection('menu');
-    mostrarToast("🧹 Base de dados do navegador limpa com sucesso.");
+    mostrarToast("🧹 Base de dados local completamente restaurada.");
   };
 
-  const calcularPosicaoOnibus = (rotaX, rotaY) => {
-    if (!rotaX || !rotaY || rotaX.length === 0) return { x: 0, y: 0 };
-    const index = Math.floor((mapTicks / 100) * (rotaX.length - 1));
-    const nextIndex = (index + 1) % rotaX.length;
-    const interpolado = (mapTicks / 100) * (rotaX.length - 1) - index;
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
 
-    const x = rotaX[index] + (rotaX[nextIndex] - rotaX[index]) * interpolado;
-    const y = rotaY[index] + (rotaY[nextIndex] - rotaY[index]) * interpolado;
-    return { x, y };
+    const userMsg = { role: 'user', text: chatInput };
+    setChatMessages(prev => [...prev, userMsg]);
+    setChatInput('');
+
+    setTimeout(() => {
+      let botResponse = "Interessante sua dúvida! Em Curitiba, a URBS é responsável por gerenciar as linhas de transporte público. Posso ajudar você a detalhar uma reclamação oficial para o 156.";
+      const inputLower = chatInput.toLowerCase();
+
+      if (inputLower.includes('espera') || inputLower.includes('atraso') || inputLower.includes('tempo')) {
+        botResponse = "De acordo com o manual operacional da URBS, a tolerância de atraso para os Ligeirões e Biarticulados é de até 5 minutos em relação ao horário de tabela planejado para as canaletas.";
+      } else if (inputLower.includes('tubo') || inputLower.includes('estacao') || inputLower.includes('embarque')) {
+        botResponse = "As estações-tubo de Curitiba oferecem embarque em nível. Se houver falha de rampa ou no validador do cartão, o cobrador deve abrir a porta de apoio para garantir o acesso universal.";
+      } else if (inputLower.includes('integração') || inputLower.includes('terminal') || inputLower.includes('cartao')) {
+        botResponse = "A integração temporal em Curitiba é feita fisicamente dentro dos terminais ou de forma virtual ao usar o Cartão Transporte da URBS nas linhas integradas homologadas.";
+      }
+
+      setChatMessages(prev => [...prev, { role: 'assistant', text: botResponse }]);
+    }, 1000);
   };
 
-  const linhasFiltradas = linhas.filter(l => 
+  // Interpolador de coordenadas reais de Lat/Lng para os ônibus móveis
+  const calcularPosicaoOnibus = (rota, ticks) => {
+    if (!rota || rota.length === 0) return [-25.4419, -49.2733];
+    const index = Math.floor((ticks / 100) * (rota.length - 1));
+    const nextIndex = (index + 1) % rota.length;
+    const interpolado = (ticks / 100) * (rota.length - 1) - index;
+
+    const lat = rota[index][0] + (rota[nextIndex][0] - rota[index][0]) * interpolado;
+    const lng = rota[index][1] + (rota[nextIndex][1] - rota[index][1]) * interpolado;
+    return [lat, lng];
+  };
+
+  const linhasFiltradas = lines => lines.filter(l => 
     l.id.includes(filtroPesquisa) || l.nome.toLowerCase().includes(filtroPesquisa.toLowerCase())
   );
 
-  const totalCo2Evitado = alertas.length * 4.5;
+  const totalCo2Evitado = (alertas.length * 5.2) + (userProfile.nivel * 15);
+  const arvoresEquivalentes = Math.floor(totalCo2Evitado / 14);
 
   return (
     <div className="min-h-screen bg-black text-slate-100 font-sans p-4 md:p-6 selection:bg-emerald-500 selection:text-slate-950">
@@ -268,21 +501,64 @@ export default function App() {
         <div className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
           <div className="bg-neutral-900 border border-emerald-500/30 p-8 rounded-3xl text-center max-w-sm w-full animate-pulse shadow-[0_0_50px_rgba(16,185,129,0.15)]">
             <span className="text-5xl block mb-4">📞</span>
-            <p className="text-xs text-emerald-400 uppercase tracking-widest font-bold">A Discar Integrado MS</p>
-            <h3 className="text-xl font-black text-slate-100 mt-2">{chamandoContato.nome}</h3>
+            <p className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Conexão Integrada de Ouvidoria</p>
+            <h3 className="text-xl font-black text-slate-100 mt-2">{chamandoContato.name}</h3>
             <p className="text-lg font-mono text-emerald-400 mt-2">{chamandoContato.tel}</p>
-            <p className="text-[10px] text-slate-500 mt-4 leading-relaxed">A estabelecer ligação segura de simulação de voz via PIMAC...</p>
+            <p className="text-[10px] text-slate-500 mt-4 leading-relaxed">Encaminhando chamada de voz integrada aos canais centrais da URBS Paraná...</p>
             <button 
               onClick={() => setChamandoContato(null)} 
               className="mt-6 px-6 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
-              Desligar Chamada
+              Desconectar Chamada
             </button>
           </div>
         </div>
       )}
 
-      {/* SISTEMA DE TOAST */}
+      {/* MODAL DE RESGATE DE CUPOM COM CÓDIGO DE BARRAS */}
+      {cupomParaResgate && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+          <div className="bg-neutral-950 border border-amber-500/30 p-6 rounded-3xl text-center max-w-sm w-full shadow-2xl">
+            <span className="text-4xl">🎟️</span>
+            <h3 className="text-md font-bold text-slate-100 mt-2">{cupomParaResgate.titulo}</h3>
+            <p className="text-xs text-slate-400">{cupomParaResgate.parceiro}</p>
+            
+            <div className="bg-white p-4 rounded-xl my-6 flex flex-col items-center justify-center mx-auto w-48">
+              <div className="flex space-x-1.5 h-16 w-full items-center justify-center">
+                <div className="w-1 bg-black h-full"></div>
+                <div className="w-2 bg-black h-full"></div>
+                <div className="w-0.5 bg-black h-full"></div>
+                <div className="w-3 bg-black h-full"></div>
+                <div className="w-1 bg-black h-full"></div>
+                <div className="w-0.5 bg-black h-full"></div>
+                <div className="w-2 bg-black h-full"></div>
+                <div className="w-1.5 bg-black h-full"></div>
+                <div className="w-3 bg-black h-full"></div>
+              </div>
+              <span className="text-[9px] font-mono text-black mt-2 font-bold">{cupomParaResgate.codigo}</span>
+            </div>
+
+            <p className="text-[10px] text-slate-500 mb-6">Ao confirmar, o valor de <strong className="text-amber-400">{cupomParaResgate.custo} Mob</strong> será deduzido da sua conta de auditor cívico.</p>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setCupomParaResgate(null)}
+                className="flex-1 py-2 bg-neutral-900 hover:bg-neutral-850 text-slate-400 text-xs font-bold rounded-lg transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={executarResgate}
+                className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-lg transition"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SISTEMA DE NOTIFICAÇÕES (TOAST) */}
       {toast && (
         <div className={`fixed bottom-5 right-5 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 border animate-bounce ${
           toast.tipo === 'warning' ? 'bg-amber-950/90 border-amber-500 text-amber-300' : 
@@ -295,7 +571,7 @@ export default function App() {
         </div>
       )}
 
-      {/* -------------------- CABEÇALHO GERAL -------------------- */}
+      {/* -------------------- CABEÇALHO GERAL (TELA DE SEÇÃO INTERNA) -------------------- */}
       {activeSection !== 'menu' && (
         <header className="max-w-7xl mx-auto mb-8 bg-neutral-950 border border-neutral-900 p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
           <button 
@@ -307,14 +583,20 @@ export default function App() {
           
           <div className="flex items-center gap-3">
             <svg viewBox="0 0 1000 700" className="w-10 h-auto rounded border border-neutral-800">
-              <rect width="1000" height="700" fill="#0038A8" />
-              <polygon points="0,0 550,700 0,700" fill="#009A44" />
-              <polygon points="0,0 600,700 550,700" fill="#FFFFFF" />
-              <polygon points="770,390 788,435 835,435 798,465 812,510 770,482 728,510 742,465 705,435 752,435" fill="#FFCD00" />
+              <rect width="1000" height="700" fill="#008751" />
+              <polygon points="0,700 1000,0 1000,150 0,700" fill="#FFFFFF" />
+              <polygon points="0,550 1000,0 0,0" fill="#008751" />
+              <polygon points="0,550 1000,0 1000,150" fill="#FFFFFF" />
+              <circle cx="500" cy="350" r="150" fill="#002A8F" />
+              <polygon points="500,280 507,300 528,300 511,313 518,333 500,320 482,333 489,313 472,300 493,300" fill="#FFFFFF" />
+              <circle cx="450" cy="350" r="6" fill="#FFFFFF" />
+              <circle cx="550" cy="350" r="6" fill="#FFFFFF" />
+              <circle cx="500" cy="410" r="6" fill="#FFFFFF" />
+              <circle cx="500" cy="380" r="4" fill="#FFFFFF" />
             </svg>
             <div>
-              <span className="text-xs font-black tracking-wider text-emerald-400 block">PIMAC</span>
-              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-bold">MS Centralizado</span>
+              <span className="text-xs font-black tracking-wider text-emerald-400 block">PIMAC • {selectedCity}</span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-widest font-bold font-mono">Edição Paraná</span>
             </div>
           </div>
 
@@ -329,16 +611,26 @@ export default function App() {
       {/* -------------------- TELA INICIAL: MENU PRINCIPAL DE 8 BOTÕES -------------------- */}
       {activeSection === 'menu' && (
         <div className="animate-fadeIn max-w-7xl mx-auto">
-          {/* BANDEIRA DO MATO GROSSO DO SUL NO TOPO */}
+          
           <div className="text-center pt-4 mb-6">
-            <svg viewBox="0 0 1000 700" className="w-32 md:w-40 h-auto mx-auto rounded-lg shadow-[0_0_25px_rgba(0,56,168,0.25)] border border-neutral-900 mb-4">
-              <rect width="1000" height="700" fill="#0038A8" />
-              <polygon points="0,0 550,700 0,700" fill="#009A44" />
-              <polygon points="0,0 600,700 550,700" fill="#FFFFFF" />
-              <polygon points="770,390 788,435 835,435 798,465 812,510 770,482 728,510 742,465 705,435 752,435" fill="#FFCD00" />
+            <svg viewBox="0 0 1000 700" className="w-32 md:w-40 h-auto mx-auto rounded-lg shadow-[0_0_25px_rgba(0,135,81,0.25)] border border-neutral-900 mb-4">
+              <rect width="1000" height="700" fill="#008751" />
+              <polygon points="0,580 1000,120 1000,0 0,460" fill="#FFFFFF" />
+              <circle cx="500" cy="350" r="150" fill="#002A8F" />
+              <polygon points="500,270 507,290 528,290 511,303 518,323 500,310 482,323 489,303 472,290 493,290" fill="#FFFFFF" />
+              <circle cx="440" cy="350" r="7" fill="#FFFFFF" />
+              <circle cx="560" cy="350" r="7" fill="#FFFFFF" />
+              <circle cx="500" cy="420" r="7" fill="#FFFFFF" />
+              <circle cx="500" cy="380" r="5" fill="#FFFFFF" />
+              <path d="M 330 350 C 330 450, 430 500, 500 500" stroke="#FFCD00" strokeWidth="6" fill="none" />
+              <path d="M 670 350 C 670 450, 570 500, 500 500" stroke="#FFCD00" strokeWidth="6" fill="none" />
             </svg>
 
-            {/* LOGÓTIPO PIMAC */}
+            <div className="inline-block bg-neutral-950 border border-neutral-900 rounded-full px-4 py-1.5 mb-4">
+              <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mr-2">Localização Ativa:</label>
+              <span className="text-xs font-bold text-emerald-400">Curitiba / PR (URBS)</span>
+            </div>
+
             <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-500 glow-text-emerald">
               PIMAC
             </h1>
@@ -347,7 +639,6 @@ export default function App() {
             </p>
           </div>
 
-          {/* PERFIL DO AUDITOR COMPACTO NA TELA PRINCIPAL */}
           <section className="max-w-4xl mx-auto mb-8 bg-neutral-900/30 border border-neutral-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
               <div className="relative w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-blue-600 flex items-center justify-center font-black text-black shadow-md">
@@ -383,10 +674,8 @@ export default function App() {
             </div>
           </section>
 
-          {/* GRELHA HARMÓNICA DE 8 BOTÕES (2 LINHAS DE 4 EM DESKTOP / 4 LINHAS DE 2 EM MOBILE) */}
-          <section className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
             
-            {/* BOTÃO 1 - AZUL */}
             <button 
               onClick={() => setActiveSection('mapa')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -397,11 +686,10 @@ export default function App() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Mapa Interativo</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Acompanhe rotas e frotas ativas ao vivo.</p>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Acompanhe biarticulados e previsões de tempo ao vivo.</p>
               </div>
             </button>
 
-            {/* BOTÃO 2 - VERDE */}
             <button 
               onClick={() => setActiveSection('frota')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -412,56 +700,52 @@ export default function App() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Estado da Frota</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Métricas e pontualidade de cada autocarro.</p>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Pontualidade e frotas de Ligeirões da URBS.</p>
               </div>
             </button>
 
-            {/* BOTÃO 3 - AZUL */}
             <button 
               onClick={() => setActiveSection('denuncias')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
             >
               <div className="flex justify-between items-center">
                 <span className="text-3xl group-hover:scale-110 transition-transform">✍️</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Denúncias & Relatos</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Registe reclamações ou problemas de lotação.</p>
+                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Denúncias & Mural</h3>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Relate problemas (+5 Mob) ou valide relatos (+2 Mob).</p>
               </div>
             </button>
 
-            {/* BOTÃO 4 - VERDE (NOVA FUNCIONALIDADE - 8º BOTÃO!) */}
             <button 
               onClick={() => setActiveSection('terminais')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
             >
               <div className="flex justify-between items-center">
                 <span className="text-3xl group-hover:scale-110 transition-transform">🏫</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Terminais MS</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Localização e estado operacional dos terminais.</p>
+                <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Terminais da URBS</h3>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Endereços completos e fluxos integrados de Curitiba.</p>
               </div>
             </button>
 
-            {/* BOTÃO 5 - AZUL */}
             <button 
-              onClick={() => setActiveSection('recompensas')}
+              onClick={() => setActiveSection('ia_chat')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
             >
               <div className="flex justify-between items-center">
-                <span className="text-3xl group-hover:scale-110 transition-transform">🎁</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span className="text-3xl group-hover:scale-110 transition-transform">🤖</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping"></span>
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Recompensas</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Consiga créditos por fiscalizar a cidade.</p>
+                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">PIMAC IA Chat</h3>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Consulte seus direitos nos tubos e formule queixas oficiais.</p>
               </div>
             </button>
 
-            {/* BOTÃO 6 - VERDE */}
             <button 
               onClick={() => setActiveSection('loja')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -472,11 +756,10 @@ export default function App() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Lojas e Cupões</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Troque créditos por vantagens locais.</p>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Troque créditos por vantagens e QR codes.</p>
               </div>
             </button>
 
-            {/* BOTÃO 7 - AZUL */}
             <button 
               onClick={() => setActiveSection('contatos')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-blue-900 bg-blue-950/10 hover:bg-blue-950/30 hover:border-blue-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -486,12 +769,11 @@ export default function App() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
               </div>
               <div>
-                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Contatos Úteis</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Telefones de urgência e ouvidorias.</p>
+                <h3 className="text-xs font-extrabold text-blue-400 uppercase tracking-wider">Contactos Úteis</h3>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Telefones da URBS, 156 e ouvidorias.</p>
               </div>
             </button>
 
-            {/* BOTÃO 8 - VERDE */}
             <button 
               onClick={() => setActiveSection('ambiental')}
               className="flex flex-col justify-between p-5 rounded-2xl border border-emerald-900 bg-emerald-950/10 hover:bg-emerald-950/30 hover:border-emerald-500 transition-all duration-300 h-36 cursor-pointer text-left group shadow-lg"
@@ -502,7 +784,7 @@ export default function App() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Impacto CO₂</h3>
-                <p className="text-[10px] text-slate-500 mt-1 leading-tight">Resultados ecológicos da fiscalização.</p>
+                <p className="text-[10px] text-slate-500 mt-1 leading-tight font-medium">Resultados ecológicos e árvores preservadas.</p>
               </div>
             </button>
 
@@ -510,75 +792,75 @@ export default function App() {
         </div>
       )}
 
-      {/* -------------------- ECRÃS DINÂMICOS (NAVEGAÇÃO TOTAL) -------------------- */}
+      {/* -------------------- ECRÃS DINÂMICOS (NAVEGAÇÃO TOTAL DE ECRÃ INTEIRO) -------------------- */}
       {activeSection !== 'menu' && (
         <main className="max-w-7xl mx-auto animate-fadeIn mb-12">
           
-          {/* ECRÃ 1: MAPA INTERATIVO */}
+          {/* ECRÃ 1: MAPA INTERATIVO REAL (GOOGLE MAPS LAYER) */}
           {activeSection === 'mapa' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl">
-                <h2 className="text-sm font-bold text-blue-400 uppercase tracking-wider mb-4">📍 Monitor de Linhas e Veículos Ativos</h2>
+              <div className="lg:col-span-2 bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl flex flex-col justify-between">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-sm font-bold text-blue-400 uppercase tracking-wider">📍 Monitor do Google Maps (Telemetria URBS Curitiba)</h2>
+                  
+                  {/* Alternador de Modo do Google Maps */}
+                  <div className="flex bg-slate-950 rounded-lg p-1 border border-slate-800 text-[10px] font-bold">
+                    <button 
+                      onClick={() => setMapType('roadmap')}
+                      className={`px-3 py-1 rounded ${mapType === 'roadmap' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                    >
+                      Google Mapa
+                    </button>
+                    <button 
+                      onClick={() => setMapType('satellite')}
+                      className={`px-3 py-1 rounded ${mapType === 'satellite' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}
+                    >
+                      Google Satélite
+                    </button>
+                  </div>
+                </div>
                 
-                <div className="aspect-video bg-black rounded-xl border border-neutral-800 relative overflow-hidden flex items-center justify-center">
-                  {/* SVG de Linhas do Mapa */}
-                  <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 0V100M40 0V100M70 0V100M90 0V100" stroke="#475569" strokeWidth="0.5"/>
-                    <path d="M0 20H100M0 50H100M0 80H100" stroke="#475569" strokeWidth="0.5"/>
-                    {linhas.map(linha => {
-                      const dPath = `M ${linha.rotaX.map((x, i) => `${x} ${linha.rotaY[i]}`).join(' L ')}`;
-                      return (
-                        <path 
-                          key={linha.id} 
-                          d={dPath} 
-                          stroke={linha.id === "080" ? "#3b82f6" : "#10b981"} 
-                          strokeWidth="0.8" 
-                          strokeDasharray="2 3" 
-                        />
-                      );
-                    })}
-                  </svg>
-
-                  {/* Renderizar autocarros móveis */}
-                  {linhas.map(linha => {
-                    const pos = calcularPosicaoOnibus(linha.rotaX, linha.rotaY);
-                    const colorClass = linha.status === 'Crítico' ? 'bg-rose-500 shadow-rose-500/40' : 'bg-emerald-500 shadow-emerald-500/40';
-                    return (
-                      <button
-                        key={linha.id}
-                        onClick={() => setSelectedBus(linha)}
-                        className={`absolute w-4.5 h-4.5 rounded-full border border-black flex items-center justify-center text-[7px] font-black text-black shadow-lg transform -translate-x-1/2 -translate-y-1/2 transition-all cursor-pointer ${colorClass}`}
-                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                      >
-                        {linha.id.slice(1)}
-                      </button>
-                    );
-                  })}
-
-                  {/* Painel do Autocarro Selecionado */}
-                  {selectedBus && (
-                    <div className="absolute bottom-4 right-4 bg-neutral-900 border border-neutral-800 p-4 rounded-xl shadow-2xl max-w-xs text-xs">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="font-extrabold text-emerald-400">#Frota {selectedBus.id}</span>
-                        <button onClick={() => setSelectedBus(null)} className="text-slate-500 hover:text-white">×</button>
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">{selectedBus.nome}</p>
-                      <p className="text-[9px] text-slate-300 font-mono mt-1">Velocidade: {selectedBus.velocidade} km/h • Placa: {selectedBus.placa}</p>
-                    </div>
+                {/* CONTAINER DO MAPA DO LEAFLET */}
+                <div 
+                  ref={mapContainerRef} 
+                  className="aspect-video bg-black rounded-xl border border-neutral-800 relative overflow-hidden flex items-center justify-center z-10"
+                  style={{ minHeight: '400px' }}
+                >
+                  {!leafletLoaded && (
+                    <div className="text-slate-500 text-xs animate-pulse">A carregar o Google Maps do Paraná...</div>
                   )}
                 </div>
               </div>
 
+              {/* DETALHES DO MAPA REAL */}
               <div className="bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3">Diagnóstico do Mapa</h3>
+                  <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3">Auditoria de Telemetria</h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Pode clicar em qualquer ícone de autocarro para aceder aos metadados de velocidade e placa. Para testar o stress do mapa, use o painel climático abaixo.
+                    Você está visualizando o mapa real do **Google Maps** centrado em Curitiba. 
+                    As posições dos autocarros e terminais correspondem à rede de canaletas integradas da URBS.
+                  </p>
+                  <p className="text-xs text-slate-400 leading-relaxed mt-2">
+                    Faça zoom no mapa para acompanhar os autocarros percorrendo as avenidas em tempo real. Clique em qualquer marcador para inspecionar a matrícula do veículo e a velocidade!
                   </p>
                 </div>
+                
+                {selectedBus && (
+                  <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-850 mt-4 animate-fadeIn">
+                    <span className="text-[10px] text-emerald-400 uppercase tracking-wider font-bold block">Biarticulado Selecionado</span>
+                    <h4 className="text-xs font-bold text-slate-200 mt-1">#{selectedBus.id} - {selectedBus.nome}</h4>
+                    <div className="grid grid-cols-2 gap-2 mt-3 text-[10px] font-mono text-slate-400">
+                      <span>Placa: {selectedBus.placa}</span>
+                      <span>Velocidade: {selectedBus.velocidade} km/h</span>
+                      <span>Pontualidade: {selectedBus.pontualidade}%</span>
+                      <span className="text-amber-400 font-bold">ETA: {selectedBus.eta} min</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t border-neutral-850 text-xs">
-                  <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Precisão Populacional</span>
-                  <span className="text-emerald-400 font-extrabold text-sm">96.4% de correspondência ao vivo</span>
+                  <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Metodologia Realtime</span>
+                  <span className="text-emerald-400 font-extrabold text-sm">Integração Síncrona Leaflet & Google Map Layers</span>
                 </div>
               </div>
             </div>
@@ -590,7 +872,7 @@ export default function App() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <div>
                   <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">🚍 Monitorização de Desempenho Operacional</h2>
-                  <p className="text-xs text-slate-500">Métricas analíticas consolidadas de pontualidade municipal.</p>
+                  <p className="text-xs text-slate-500">Métricas analíticas consolidadas de pontualidade de Curitiba.</p>
                 </div>
                 <input
                   type="text"
@@ -613,7 +895,7 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-900 text-xs">
-                    {linhasFiltradas.map(linha => (
+                    {linhasFiltradas(linhas).map(linha => (
                       <tr key={linha.id} className="hover:bg-neutral-900/10">
                         <td className="py-3.5 pl-2 font-bold text-emerald-400">#{linha.id}</td>
                         <td>
@@ -671,7 +953,7 @@ export default function App() {
                       <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Seu Nome</label>
                       <input 
                         type="text" 
-                        placeholder="Anónimo"
+                        placeholder="Anônimo"
                         value={novoAutorRelato}
                         onChange={(e) => setNovoAutorRelato(e.target.value)}
                         className="w-full bg-black border border-neutral-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none placeholder:text-slate-700"
@@ -679,11 +961,21 @@ export default function App() {
                     </div>
                   </div>
 
+                  <div className="flex items-center space-x-2 bg-black border border-neutral-800 px-3 py-2 rounded-xl">
+                    <input 
+                      type="checkbox" 
+                      id="pcd" 
+                      checked={pcdAcessivel} 
+                      onChange={(e) => setPcdAcessivel(e.target.checked)}
+                      className="accent-emerald-500 w-4 h-4 cursor-pointer" />
+                    <label htmlFor="pcd" className="text-[10px] font-bold text-slate-300 cursor-pointer">♿ Fiscalizar Acessibilidade / Rampas (PCD)</label>
+                  </div>
+
                   <div>
                     <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Detalhes da Ocorrência</label>
                     <textarea 
                       rows="3"
-                      placeholder="Descreva o ocorrido de forma sucinta..."
+                      placeholder="Descreva detalhes como estação-tubo, número do carro ou sentido..."
                       value={novoTextoRelato}
                       onChange={(e) => setNovoTextoRelato(e.target.value)}
                       className="w-full bg-black border border-neutral-800 rounded-lg p-3 text-xs text-slate-200 focus:outline-none resize-none placeholder:text-slate-700"
@@ -691,22 +983,34 @@ export default function App() {
                   </div>
 
                   <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider transition cursor-pointer">
-                    Enviar Auditoria (+25 XP)
+                    Enviar Auditoria (+5 Mob)
                   </button>
                 </form>
               </div>
 
               <div className="lg:col-span-2 bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl">
-                <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4">🔔 Histórico do Mural Coletivo</h3>
+                <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-4">🔔 Mural Cívico de Apoio Coletivo</h3>
                 <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                   {alertas.map(alerta => (
-                    <div key={alerta.id} className="bg-black border border-neutral-850 p-4 rounded-xl">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] bg-rose-950/40 text-rose-400 border border-rose-900/40 px-2 py-0.5 rounded font-bold uppercase">{alerta.tipo}</span>
-                        <span className="text-[10px] text-slate-500">{alerta.hora} • Linha #{alerta.linha}</span>
+                    <div key={alerta.id} className="bg-black border border-neutral-850 p-4 rounded-xl flex flex-col justify-between hover:border-neutral-800 transition">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] bg-rose-950/40 text-rose-400 border border-rose-900/40 px-2 py-0.5 rounded font-bold uppercase">{alerta.tipo}</span>
+                          <span className="text-[10px] text-slate-500">{alerta.hora} • Linha #{alerta.linha}</span>
+                        </div>
+                        <p className="text-xs text-slate-300 italic mt-2">"{alerta.texto}"</p>
+                        <span className="text-[9px] text-slate-500 block text-right mt-2">— {alerta.autor}</span>
                       </div>
-                      <p className="text-xs text-slate-300 italic mt-2">"{alerta.texto}"</p>
-                      <span className="text-[9px] text-slate-500 block text-right mt-2">— {alerta.autor}</span>
+
+                      <div className="mt-3 pt-3 border-t border-neutral-900 flex justify-between items-center">
+                        <span className="text-[10px] text-slate-500 font-bold uppercase">Validado por {alerta.votos || 1} pessoas</span>
+                        <button 
+                          onClick={() => upvotarAlerta(alerta.id)}
+                          className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-850 hover:text-emerald-400 text-slate-400 font-bold text-[9px] uppercase rounded-lg border border-neutral-800 flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          👍 Validar (+2 Mob)
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -714,16 +1018,16 @@ export default function App() {
             </div>
           )}
 
-          {/* ECRÃ 4: TERMINAIS DE INTEGRAÇÃO (OITAVO BOTÃO!) */}
+          {/* ECRÃ 4: TERMINAIS DE INTEGRAÇÃO */}
           {activeSection === 'terminais' && (
             <div className="bg-neutral-900/30 border border-neutral-900 p-6 rounded-2xl shadow-xl">
               <div className="mb-6">
-                <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">🏫 Terminais de Integração de Campo Grande/MS</h2>
-                <p className="text-xs text-slate-500">Consulte o estado operacional, localização e fluxo de passageiros em tempo real.</p>
+                <h2 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">🏫 Terminais de Integração Ativos (Curitiba)</h2>
+                <p className="text-xs text-slate-500">Consulte os endereços completos, CEPs reais e fluxo de cada terminal.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {terminaisIntegracao.map(terminal => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(CIDADES_DATA[selectedCity]?.terminais || []).map(terminal => (
                   <div key={terminal.id} className="bg-neutral-950 border border-neutral-850 p-4 rounded-xl flex flex-col justify-between hover:border-emerald-500/30 transition">
                     <div>
                       <div className="flex justify-between items-center">
@@ -735,17 +1039,17 @@ export default function App() {
                         </span>
                       </div>
                       <h3 className="text-xs font-bold text-slate-200 mt-4">{terminal.nome}</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{terminal.localizacao}</p>
+                      <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{terminal.localizacao}</p>
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between text-[10px]">
                       <div>
-                        <span className="text-slate-500 block font-bold">Fluxo</span>
+                        <span className="text-slate-500 block font-bold">Fluxo Estimado</span>
                         <span className="font-semibold text-slate-300">{terminal.fluxo}</span>
                       </div>
                       <div>
-                        <span className="text-slate-500 block font-bold">Linhas</span>
-                        <span className="font-semibold text-slate-300">{terminal.linhasAtendidas} ativas</span>
+                        <span className="text-slate-500 block font-bold">Linhas Ativas</span>
+                        <span className="font-semibold text-slate-300">{terminal.linhasAtendidas} rotas</span>
                       </div>
                     </div>
                   </div>
@@ -754,17 +1058,71 @@ export default function App() {
             </div>
           )}
 
-          {/* ECRÃ 5: RECOMPENSAS INFO */}
-          {activeSection === 'recompensas' && (
-            <div className="bg-neutral-900/30 border border-neutral-900 p-8 rounded-2xl text-center max-w-2xl mx-auto shadow-xl">
-              <span className="text-5xl">🏆</span>
-              <h2 className="text-base font-bold text-emerald-400 uppercase tracking-wider mt-4">Sistema de Recompensas PIMAC</h2>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Cada denúncia ou fiscalização que envia na nossa plataforma ajuda a sinalizar os maiores congestionamentos e atrasos na capital de Mato Grosso do Sul.
-              </p>
-              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                Ao participar, acumula **Moedas de Mobilidade (Mob)** e ganha **XP** para subir de nível. Os créditos virtuais acumulados podem ser trocados por cupões de consumo reais em parceiros comerciais perto de terminais!
-              </p>
+          {/* ECRÃ 5: CHAT DE IA CÍVICA */}
+          {activeSection === 'ia_chat' && (
+            <div className="bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl max-w-3xl mx-auto animate-fadeIn">
+              <div className="border-b border-neutral-850 pb-4 mb-4 flex items-center space-x-3">
+                <span className="text-3xl">🤖</span>
+                <div>
+                  <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider">PIMAC IA - Ouvidoria de Curitiba</h3>
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase">Consultoria Legal de Direitos do Passageiro URBS</p>
+                </div>
+              </div>
+
+              {/* Box de Mensagens */}
+              <div className="bg-black/80 rounded-xl border border-neutral-850 p-4 h-80 overflow-y-auto space-y-3 flex flex-col">
+                {chatMessages.map((msg, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`max-w-[80%] p-3 rounded-2xl text-xs leading-relaxed ${
+                      msg.role === 'user' 
+                        ? 'bg-blue-600 text-white self-end rounded-tr-none' 
+                        : 'bg-neutral-900 text-slate-100 self-start rounded-tl-none'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                ))}
+              </div>
+
+              {/* Opções Rápidas de Pergunta */}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button 
+                  onClick={() => setChatInput("Qual é o tempo máximo permitido de atraso pela URBS?")}
+                  className="px-2.5 py-1.5 bg-neutral-950 border border-neutral-900 hover:border-blue-500 text-slate-400 hover:text-blue-400 text-[10px] font-bold rounded-lg transition"
+                >
+                  🕒 Tolerância de Atraso URBS
+                </button>
+                <button 
+                  onClick={() => setChatInput("O que fazer se a rampa de acessibilidade do tubo estiver estragada?")}
+                  className="px-2.5 py-1.5 bg-neutral-950 border border-neutral-900 hover:border-blue-500 text-slate-400 hover:text-blue-400 text-[10px] font-bold rounded-lg transition"
+                >
+                  ♿ Defeito em Estações-Tubo
+                </button>
+                <button 
+                  onClick={() => setChatInput("Como funciona a integração temporal em Curitiba?")}
+                  className="px-2.5 py-1.5 bg-neutral-950 border border-neutral-900 hover:border-blue-500 text-slate-400 hover:text-blue-400 text-[10px] font-bold rounded-lg transition"
+                >
+                  💳 Integração do Cartão Transporte
+                </button>
+              </div>
+
+              {/* Input Form */}
+              <form onSubmit={handleSendMessage} className="mt-4 flex gap-2">
+                <input 
+                  type="text" 
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Escreva sua dúvida jurídica ou operacional..."
+                  className="flex-1 bg-black border border-neutral-800 rounded-lg px-4 py-2 text-xs focus:outline-none focus:border-blue-500"
+                />
+                <button 
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase rounded-lg transition"
+                >
+                  Enviar
+                </button>
+              </form>
             </div>
           )}
 
@@ -772,8 +1130,8 @@ export default function App() {
           {activeSection === 'loja' && (
             <div className="space-y-6">
               <div className="bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl">
-                <h2 className="text-sm font-bold text-blue-400 uppercase tracking-wider">🛍️ Central de Resgate de Cupões</h2>
-                <p className="text-xs text-slate-400">Troque os seus pontos Mob obtidos por salgados, café ou vantagens locais.</p>
+                <h2 className="text-sm font-bold text-blue-400 uppercase tracking-wider">🛍️ Central Conveniada de Cupões de Curitiba</h2>
+                <p className="text-xs text-slate-400">Troque as moedas Mob obtidas em auditorias por vantagens reais em lanchonetes e papelarias conveniadas.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -785,19 +1143,19 @@ export default function App() {
                       <div>
                         <div className="flex justify-between items-center">
                           <span className="text-3xl">{cupom.icone}</span>
-                          <span className="bg-amber-500/10 text-amber-400 text-[9px] px-2 py-0.5 rounded-full font-bold">{cupom.categoria}</span>
+                          <span className="bg-amber-500/10 text-amber-400 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase">{cupom.categoria}</span>
                         </div>
-                        <h4 className="text-xs font-bold text-slate-100 mt-3">{cupom.titulo}</h4>
+                        <h4 className="text-xs font-bold text-slate-100 mt-4">{cupom.titulo}</h4>
                         <p className="text-[10px] text-slate-500">{cupom.parceiro}</p>
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-neutral-850 flex justify-between items-center">
+                      <div className="mt-4 pt-3 border-t border-neutral-900 flex justify-between items-center">
                         <span className="text-xs font-mono font-bold text-amber-400">{cupom.custo} Mob</span>
                         {jaResgatou ? (
                           <span className="text-[10px] text-slate-500 font-bold">Resgatado ✓</span>
                         ) : (
                           <button 
-                            onClick={() => resgatarCupom(cupom)}
+                            onClick={() => confirmarResgatarCupom(cupom)}
                             disabled={saldoInsuficiente}
                             className={`px-3 py-1.5 rounded-lg text-[10px] font-bold cursor-pointer ${saldoInsuficiente ? 'bg-neutral-800 text-slate-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                           >
@@ -811,7 +1169,7 @@ export default function App() {
               </div>
 
               {cuponsResgatados.length > 0 && (
-                <div className="bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl">
+                <div className="bg-neutral-900/30 border border-neutral-900 p-5 rounded-2xl shadow-xl animate-fadeIn">
                   <h3 className="text-xs font-bold text-slate-200 mb-3">🎫 Seus Cupões Ativos</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {cuponsResgatados.map((cupom, idx) => (
@@ -832,12 +1190,12 @@ export default function App() {
           {/* ECRÃ 7: CONTATOS ÚTEIS */}
           {activeSection === 'contatos' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {contatosEmergencia.map(contato => (
+              {CIDADES_DATA[selectedCity]?.contatos.map(contato => (
                 <div key={contato.id} className="bg-neutral-900/30 border border-neutral-900 p-4 rounded-xl flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{contato.icone}</span>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-200">{contato.nome}</h4>
+                      <h4 className="text-xs font-bold text-slate-200">{contato.name}</h4>
                       <p className="text-[10px] text-slate-500 leading-tight">{contato.desc}</p>
                       <span className="text-xs font-mono font-bold text-emerald-400 block mt-1">{contato.tel}</span>
                     </div>
@@ -857,13 +1215,20 @@ export default function App() {
           {activeSection === 'ambiental' && (
             <div className="bg-neutral-900/30 border border-neutral-900 p-6 rounded-2xl max-w-2xl mx-auto text-center shadow-xl">
               <span className="text-4xl block mb-2">🍃</span>
-              <h2 className="text-base font-bold text-blue-400 uppercase tracking-wider">Descarbonização & Mobilidade Limpa</h2>
+              <h2 className="text-base font-bold text-blue-400 uppercase tracking-wider">Descarbonização de Curitiba</h2>
               <p className="text-xs text-slate-400 leading-relaxed mt-2">
-                As nossas estimativas mostram que uma fiscalização cidadã em Campo Grande ajuda a reduzir gargalos de trânsito. Isso otimiza o fluxo dos autocarros e previne que as frotas fiquem paradas com o motor ligado no ralenti.
+                Curitiba possui um dos sistemas de transporte mais eficientes do mundo. Com a PIMAC, ajudamos a evitar congestionamentos nas canaletas, prevenindo que frotas de biarticulados fiquem paradas com motores ligados em marcha lenta, poupando combustível e poupando árvores.
               </p>
-              <div className="mt-6 p-4 bg-black border border-neutral-850 rounded-xl inline-block">
-                <span className="text-2xl font-mono font-black text-emerald-400">-{totalCo2Evitado} kg CO₂</span>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Total Poupado nas Suas Auditorias</p>
+              
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                <div className="bg-black border border-neutral-850 p-4 rounded-xl">
+                  <span className="text-2xl font-mono font-black text-emerald-400 block">-{totalCo2Evitado} kg CO₂</span>
+                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Carbono Evitado</p>
+                </div>
+                <div className="bg-black border border-neutral-850 p-4 rounded-xl">
+                  <span className="text-2xl font-mono font-black text-emerald-400 block">🌳 {arvoresEquivalentes}</span>
+                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Árvores Preservadas</p>
+                </div>
               </div>
             </div>
           )}
@@ -875,8 +1240,8 @@ export default function App() {
       {activeSection !== 'menu' && (
         <section className="bg-neutral-900/30 border border-neutral-900 p-4 rounded-2xl mt-8 flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto">
           <div>
-            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Cenário de Simulação Operacional</h4>
-            <p className="text-[10px] text-slate-500 mt-0.5">Altere o clima para simular o comportamento de tráfego de Campo Grande.</p>
+            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Cenário de Simulação de Trânsito</h4>
+            <p className="text-[10px] text-slate-500 mt-0.5">Altere o clima para simular o comportamento de tráfego de Curitiba.</p>
           </div>
           <div className="flex gap-2">
             <button 
@@ -889,7 +1254,7 @@ export default function App() {
               onClick={() => aplicarClima('rainy')} 
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${clima === 'rainy' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-transparent border-neutral-800 text-slate-500 hover:bg-neutral-900'}`}
             >
-              🌧️ Temporal (MS)
+              🌧️ Clima Curitibano
             </button>
             <button 
               onClick={() => aplicarClima('pico')} 
@@ -903,7 +1268,7 @@ export default function App() {
 
       {/* RODAPÉ */}
       <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-neutral-900 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
-        <p>PIMAC • Plataforma de Auditoria Cidadã Integrada do Mato Grosso do Sul • Protótipo de Testes Locais.</p>
+        <p>PIMAC • Plataforma de Auditoria Cidadã Integrada • Curitiba/PR • Protótipo de Testes e Demonstrações de Escala.</p>
         <button onClick={limparBancoDeDados} className="text-slate-500 hover:text-slate-300 underline cursor-pointer bg-transparent border-none">
           🧹 Repor Base de Dados do Navegador
         </button>
