@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from 'react';
 
-// Dados iniciais mockados para o MVP das linhas de ônibus
 const dadosIniciaisLinhas = [
-  { id: "080", nome: "Terminal Bandeirantes / Aero Rancho", pontualidade: 62, atrasoMedio: 24, status: "Crítico", passageirosHora: 450 },
-  { id: "070", nome: "Terminal Bandeirantes / General Osório", pontualidade: 88, atrasoMedio: 7, status: "Normal", passageirosHora: 310 },
-  { id: "020", nome: "Terminal Central / Terminal Guaicurus", pontualidade: 71, atrasoMedio: 16, status: "Atenção", passageirosHora: 520 },
-  { id: "051", nome: "Shopping / Bandeirantes", pontualidade: 94, atrasoMedio: 4, status: "Excelente", passageirosHora: 180 },
-  { id: "081", nome: "Terminal Bandeirantes / Nova Bahia", pontualidade: 55, atrasoMedio: 29, status: "Crítico", passageirosHora: 380 },
-  { id: "030", nome: "Terminal Hercules Maymone / Centro", pontualidade: 82, atrasoMedio: 9, status: "Normal", passageirosHora: 290 }
+  { id: "080", nome: "Term. Bandeirantes / Aero Rancho", pontualidade: 62, atrasoMedio: 24, status: "Crítico", passageirosHora: 450, velocidade: 22, placa: "PIM-0801", rotaX: [20, 45, 70, 90], rotaY: [30, 40, 50, 75] },
+  { id: "070", nome: "Term. Bandeirantes / Gen. Osório", pontualidade: 88, atrasoMedio: 7, status: "Normal", passageirosHora: 310, velocidade: 40, placa: "PIM-0702", rotaX: [15, 30, 55, 80], rotaY: [70, 60, 50, 20] },
+  { id: "020", nome: "Term. Central / Term. Guaicurus", pontualidade: 71, atrasoMedio: 16, status: "Atenção", passageirosHora: 520, velocidade: 31, placa: "PIM-0203", rotaX: [10, 40, 60, 85], rotaY: [20, 45, 55, 80] },
+  { id: "051", nome: "Shopping / Bandeirantes", pontualidade: 94, atrasoMedio: 4, status: "Excelente", passageirosHora: 180, velocidade: 45, placa: "PIM-0514", rotaX: [85, 65, 45, 20], rotaY: [15, 35, 45, 60] }
 ];
 
-// Alertas iniciais da população
 const alertasIniciais = [
-  { id: 1, hora: "11:10", linha: "080", tipo: "Atraso grave", texto: "Ônibus que deveria passar às 11:00 não apareceu na Afonso Pena.", autor: "Usuário Anônimo" },
-  { id: 2, hora: "10:55", linha: "020", tipo: "Superlotação", texto: "Linha 020 completamente cheia e ar-condicionado desligado.", autor: "Marcos S." },
-  { id: 3, hora: "10:30", linha: "081", tipo: "Quebra de Veículo", texto: "Ônibus quebrado logo após a saída do terminal.", autor: "Ana Paula" }
+  { id: 1, hora: "12:10", linha: "080", tipo: "Atraso grave", texto: "Afonso Pena travada. Ônibus demorou 25 minutos além do planejado.", autor: "Carlos M.", xpGanho: 15 },
+  { id: 2, hora: "11:55", linha: "020", tipo: "Superlotação", texto: "Superlotado desde a saída do terminal Guaicurus.", autor: "Sandra R.", xpGanho: 15 }
+];
+
+const cuponsParceiros = [
+  { id: "cupom1", titulo: "Salgado + Refri de 200ml", parceiro: "Lanchonete Term. Bandeirantes", custo: 100, icone: "🍔", categoria: "Alimentação", codigo: "PIMAC-LANCHE-98" },
+  { id: "cupom2", titulo: "10% de Desconto na Cópia/Impressão", parceiro: "Copiadora Central UCDB/UFMS", custo: 150, icone: "📄", categoria: "Serviços", codigo: "PIMAC-COPIA-15" },
+  { id: "cupom3", titulo: "Café Expresso Cortesia", parceiro: "Ponto do Café Afonso Pena", custo: 200, icone: "☕", categoria: "Alimentação", codigo: "PIMAC-CAFE-FREE" },
+  { id: "cupom4", titulo: "Passe Unitário de Integração", parceiro: "Consórcio Local (Simulado)", custo: 400, icone: "🚌", categoria: "Transporte", codigo: "PIMAC-PASSE-LOCAL" }
 ];
 
 export default function App() {
-  // Estados que tentam carregar do localStorage antes de usar os dados iniciais
   const [linhas, setLinhas] = useState(() => {
     const salvas = localStorage.getItem('pimac_linhas');
     return salvas ? JSON.parse(salvas) : dadosIniciaisLinhas;
@@ -29,64 +30,53 @@ export default function App() {
     return salvos ? JSON.parse(salvos) : alertasIniciais;
   });
 
+  const [userProfile, setUserProfile] = useState(() => {
+    const salvo = localStorage.getItem('pimac_profile');
+    return salvo ? JSON.parse(salvo) : { nivel: 1, xp: 20, moedas: 120 };
+  });
+
+  const [cuponsResgatados, setCuponsResgatados] = useState(() => {
+    const salvos = localStorage.getItem('pimac_cupons');
+    return salvos ? JSON.parse(salvos) : [];
+  });
+
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'rewards' | 'analytics'
+  const [clima, setClima] = useState('sunny'); // 'sunny' | 'rainy' | 'pico'
   const [filtroPesquisa, setFiltroPesquisa] = useState('');
-  const [filtroStatus, setFiltroStatus] = useState('Todos');
-  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0] || dadosIniciaisLinhas[0]);
-  
-  // Estado para o formulário de novos alertas de auditoria
+  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0]);
+  const [mapTicks, setMapTicks] = useState(0); // Controla a posição dos ônibus na animação do mapa
+  const [selectedBus, setSelectedBus] = useState(null);
+
+  // Formulário
   const [novaLinhaRelato, setNovaLinhaRelato] = useState('080');
   const [novoTipoRelato, setNovoTipoRelato] = useState('Atraso grave');
   const [novoTextoRelato, setNovoTextoRelato] = useState('');
   const [novoAutorRelato, setNovoAutorRelato] = useState('');
-  const [toastMensagem, setToastMensagem] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  // Simulador de hora e atualizações "Live"
-  const [horaAtual, setHoraAtual] = useState('');
   useEffect(() => {
-    const atualizarRelogio = () => {
-      const agora = new Date();
-      setHoraAtual(agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-    };
-    atualizarRelogio();
-    const interval = setInterval(atualizarRelogio, 1000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      setMapTicks((prev) => (prev >= 100 ? 0 : prev + 0.5));
+    }, 100);
+    return () => clearInterval(timer);
   }, []);
 
-  // Monitora mudanças nas linhas e salva no localStorage automaticamente
   useEffect(() => {
     localStorage.setItem('pimac_linhas', JSON.stringify(linhas));
-  }, [linhas]);
-
-  // Monitora mudanças nos alertas e salva no localStorage automaticamente
-  useEffect(() => {
     localStorage.setItem('pimac_alertas', JSON.stringify(alertas));
-  }, [alertas]);
+    localStorage.setItem('pimac_profile', JSON.stringify(userProfile));
+    localStorage.setItem('pimac_cupons', JSON.stringify(cuponsResgatados));
+  }, [linhas, alertas, userProfile, cuponsResgatados]);
 
-  // Mostrar aviso de sucesso (Toast personalizado)
-  const mostrarToast = (mensagem) => {
-    setToastMensagem(mensagem);
-    setTimeout(() => {
-      setToastMensagem(null);
-    }, 4000);
+  const mostrarToast = (msg, tipo = 'success') => {
+    setToast({ msg, tipo });
+    setTimeout(() => setToast(null), 4000);
   };
 
-  // Função para limpar todos os dados salvos e resetar para o padrão inicial
-  const resetarDados = () => {
-    if (window.confirm("Deseja limpar todos os relatos cadastrados e restaurar o painel padrão?")) {
-      localStorage.removeItem('pimac_linhas');
-      localStorage.removeItem('pimac_alertas');
-      setLinhas(dadosIniciaisLinhas);
-      setAlertas(alertasIniciais);
-      setLinhaSelecionada(dadosIniciaisLinhas[0]);
-      mostrarToast("🔄 Dados padrão restaurados com sucesso!");
-    }
-  };
-
-  // Função para enviar o relato de auditoria
   const lidarComEnvioRelato = (e) => {
     e.preventDefault();
     if (!novoTextoRelato.trim()) {
-      mostrarToast("⚠️ Por favor, descreva o problema detectado.");
+      mostrarToast("⚠️ Descreva o ocorrido para registrar a denúncia.", "warning");
       return;
     }
 
@@ -99,219 +89,275 @@ export default function App() {
       linha: novaLinhaRelato,
       tipo: novoTipoRelato,
       texto: novoTextoRelato,
-      autor: novoAutorRelato.trim() || "Cidadão Anônimo"
+      autor: novoAutorRelato.trim() || "Anônimo",
+      xpGanho: 15
     };
 
-    // Adiciona o novo alerta no topo da lista
     setAlertas([novoAlerta, ...alertas]);
 
-    // Simula impacto nos dados da linha por receber reclamação (aumenta o tempo de atraso)
-    setLinhas(linhas.map(l => {
+    // Atualiza status da linha impactada
+    setLinhas(prev => prev.map(l => {
       if (l.id === novaLinhaRelato) {
-        const novoAtraso = l.atrasoMedio + 3;
-        const novaPontualidade = Math.max(30, l.pontualidade - 4);
-        const novoStatus = novoAtraso > 20 ? "Crítico" : (novoAtraso > 10 ? "Atenção" : "Normal");
-        
-        const linhaAtualizada = { ...l, atrasoMedio: novoAtraso, pontualidade: novaPontualidade, status: novoStatus };
-        if (linhaSelecionada.id === l.id) {
-          setLinhaSelecionada(linhaAtualizada);
-        }
-        return linhaAtualizada;
+        const novoAtraso = l.atrasoMedio + 5;
+        const novaPontualidade = Math.max(30, l.pontualidade - 6);
+        return { 
+          ...l, 
+          atrasoMedio: novoAtraso, 
+          pontualidade: novaPontualidade, 
+          status: novoAtraso > 20 ? "Crítico" : "Atenção" 
+        };
       }
       return l;
     }));
 
-    // Reseta os campos do formulário
+    // Sistema de Gamificação (Dá XP e moedas de mobilidade)
+    setUserProfile(prev => {
+      let novoXp = prev.xp + 15;
+      let novoNivel = prev.nivel;
+      if (novoXp >= 100) {
+        novoXp -= 100;
+        novoNivel += 1;
+        mostrarToast(`🎉 EXCELENTE! Você subiu para o Nível ${novoNivel}!`, 'level');
+      }
+      return {
+        nivel: novoNivel,
+        xp: novoXp,
+        moedas: prev.moedas + 40
+      };
+    });
+
     setNovoTextoRelato('');
     setNovoAutorRelato('');
-    mostrarToast("✅ Relatório de auditoria enviado e processado pelo sistema!");
+    mostrarToast("✅ Auditoria enviada! Você ganhou +15 XP e +40 Moedas!");
   };
 
-  // Filtra as linhas conforme busca e status selecionado
-  const linhasFiltradas = linhas.filter(linha => {
-    const batePesquisa = linha.id.includes(filtroPesquisa) || linha.nome.toLowerCase().includes(filtroPesquisa.toLowerCase());
-    const bateStatus = filtroStatus === 'Todos' || linha.status === filtroStatus;
-    return batePesquisa && bateStatus;
-  });
+  const aplicarClima = (novoClima) => {
+    setClima(novoClima);
+    if (novoClima === 'rainy') {
+      setLinhas(prev => prev.map(l => ({
+        ...l,
+        atrasoMedio: l.atrasoMedio + 12,
+        pontualidade: Math.max(35, l.pontualidade - 18),
+        velocidade: Math.max(12, l.velocidade - 10),
+        status: "Crítico"
+      })));
+      mostrarToast("🌧️ Temporal Ativado: Tráfego lento e atrasos severos na Afonso Pena!", "info");
+    } else if (novoClima === 'pico') {
+      setLinhas(prev => prev.map(l => ({
+        ...l,
+        passageirosHora: Math.round(l.passageirosHora * 1.5),
+        atrasoMedio: l.atrasoMedio + 6,
+        pontualidade: Math.max(40, l.pontualidade - 10),
+        status: l.atrasoMedio > 20 ? "Crítico" : "Atenção"
+      })));
+      mostrarToast("🚗 Pico Ativado: Lotações máximas registradas!", "info");
+    } else {
+      setLinhas(dadosIniciaisLinhas);
+      mostrarToast("☀️ Dia Normal Ativado: Métricas padrões reestabelecidas.");
+    }
+  };
 
-  // Métricas calculadas dinamicamente com base no estado atual das linhas
-  const pontualidadeMedia = Math.round(linhas.reduce((acc, l) => acc + l.pontualidade, 0) / linhas.length);
-  const tempoEsperaMedio = (linhas.reduce((acc, l) => acc + l.atrasoMedio, 0) / linhas.length).toFixed(1);
-  const totalAlertasAtivos = alertas.length;
+  const resgatarCupom = (cupom) => {
+    if (userProfile.moedas < cupom.custo) {
+      mostrarToast("❌ Saldo de moedas insuficiente. Continue auditando!", "warning");
+      return;
+    }
+
+    setUserProfile(prev => ({ ...prev, moedas: prev.moedas - cupom.custo }));
+    setCuponsResgatados([ { ...cupom, resgatadoEm: new Date().toLocaleDateString('pt-BR') }, ...cuponsResgatados ]);
+    mostrarToast(`🎁 Cupom resgatado com sucesso! Código: ${cupom.codigo}`);
+  };
+
+  const limparBancoDeDados = () => {
+    localStorage.removeItem('pimac_linhas');
+    localStorage.removeItem('pimac_alertas');
+    localStorage.removeItem('pimac_profile');
+    localStorage.removeItem('pimac_cupons');
+    setLinhas(dadosIniciaisLinhas);
+    setAlertas(alertasIniciais);
+    setUserProfile({ nivel: 1, xp: 20, moedas: 120 });
+    setCuponsResgatados([]);
+    mostrarToast("🧹 Todos os dados salvos no navegador foram resetados.");
+  };
+
+  // Filtros de linhas
+  const linhasFiltradas = linhas.filter(l => 
+    l.id.includes(filtroPesquisa) || l.nome.toLowerCase().includes(filtroPesquisa.toLowerCase())
+  );
+
+  const calcularPosicaoOnibus = (rotaX, rotaY) => {
+    const index = Math.floor((mapTicks / 100) * (rotaX.length - 1));
+    const nextIndex = (index + 1) % rotaX.length;
+    const interpolado = (mapTicks / 100) * (rotaX.length - 1) - index;
+
+    const x = rotaX[index] + (rotaX[nextIndex] - rotaX[index]) * interpolado;
+    const y = rotaY[index] + (rotaY[nextIndex] - rotaY[index]) * interpolado;
+    return { x, y };
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-6 selection:bg-emerald-500 selection:text-slate-950">
       
-      {/* TOAST NOTIFICATION */}
-      {toastMensagem && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-emerald-500 text-emerald-400 px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 animate-bounce">
-          <span className="text-xl">📊</span>
-          <span className="font-semibold text-sm">{toastMensagem}</span>
+      {/* TOAST SYSTEM */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 border animate-bounce ${
+          toast.tipo === 'warning' ? 'bg-amber-950/90 border-amber-500 text-amber-300' : 
+          toast.tipo === 'info' ? 'bg-sky-950/90 border-sky-500 text-sky-300' : 
+          toast.tipo === 'level' ? 'bg-fuchsia-950/90 border-fuchsia-500 text-fuchsia-300' :
+          'bg-slate-900/90 border-emerald-500 text-emerald-400'
+        }`}>
+          <span className="text-xl">📢</span>
+          <span className="font-semibold text-sm">{toast.msg}</span>
         </div>
       )}
 
       {/* HEADER DA PLATAFORMA */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-6 gap-4">
-        <div>
-          <div className="flex items-center space-x-3">
-            <div className="bg-emerald-500 text-slate-950 p-2 rounded-lg font-black text-xl tracking-tighter">P</div>
-            <div>
-              <h1 className="text-2xl font-extrabold tracking-wider text-emerald-400 flex items-center gap-2">
-                PIMAC <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">MVP v1.0</span>
-              </h1>
-              <p className="text-xs text-slate-400 uppercase tracking-widest">Plataforma Integrada de Mobilidade e Auditoria Cidadã</p>
-            </div>
+      <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 border-b border-slate-800 pb-6 gap-6">
+        <div className="flex items-center space-x-3">
+          <div className="bg-emerald-500 text-slate-950 p-2.5 rounded-xl font-black text-2xl tracking-tighter shadow-lg shadow-emerald-500/20">P</div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-wider text-emerald-400 flex items-center gap-2">
+              PIMAC <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">GAMIFIED v2.0</span>
+            </h1>
+            <p className="text-xs text-slate-400 uppercase tracking-widest">Plataforma Integrada de Mobilidade e Auditoria Cidadã</p>
           </div>
         </div>
-        <div className="flex items-center space-x-4 self-stretch md:self-auto justify-between md:justify-end bg-slate-900 px-4 py-2.5 rounded-xl border border-slate-800">
-          <div className="text-right">
-            <span className="text-xs text-slate-500 block">HORA DO SISTEMA</span>
-            <span className="font-mono text-sm font-bold text-slate-300">{horaAtual || "Carregando..."}</span>
+
+        {/* PROFILE GAMIFICADO */}
+        <div className="flex flex-wrap items-center gap-4 bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-800 w-full xl:w-auto">
+          <div className="flex items-center space-x-3">
+            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 font-extrabold text-slate-950 shadow-md">
+              <span className="text-xs absolute -top-1.5 -right-1.5 bg-fuchsia-500 text-white rounded-full px-1.5 py-0.5 font-bold text-[8px]">LVL</span>
+              {userProfile.nivel}
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Auditor de Campo Grande</p>
+              <div className="flex items-center space-x-2 w-28 mt-1">
+                <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${userProfile.xp}%` }}></div>
+                </div>
+                <span className="text-[10px] font-mono text-slate-400">{userProfile.xp}/100</span>
+              </div>
+            </div>
           </div>
-          <div className="w-px h-8 bg-slate-800"></div>
-          <div className="flex items-center space-x-2 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>MONITOR LIVE</span>
+          <div className="hidden sm:block w-px h-8 bg-slate-800"></div>
+          <div className="flex items-center space-x-2 bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-500/20">
+            <span className="text-lg">🪙</span>
+            <div>
+              <span className="text-[10px] text-amber-500/80 block font-bold tracking-widest">CRÉDITOS</span>
+              <span className="font-mono text-sm font-bold text-amber-400">{userProfile.moedas} Mob</span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* METRIC CARDS GRID */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 hover:border-emerald-500/40 transition-all duration-300 shadow-lg group">
-          <div className="flex justify-between items-start">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pontualidade Média</p>
-            <span className="text-lg group-hover:scale-125 transition-transform duration-300">⏱️</span>
-          </div>
-          <div className="flex items-baseline space-x-2 mt-2">
-            <p className="text-3xl font-extrabold text-emerald-400">{pontualidadeMedia}%</p>
-            <span className="text-xs text-emerald-500/80 font-medium">Meta: 85%</span>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div 
-              className="bg-emerald-400 h-1.5 rounded-full transition-all duration-500" 
-              style={{ width: `${pontualidadeMedia}%` }}
-            ></div>
-          </div>
+      {/* SIMULADOR DE CLIMA / EVENTOS */}
+      <section className="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700/60 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Simulador PIMAC</span>
+          <p className="text-sm text-slate-300 mt-1">Simule cenários urbanos para analisar o impacto na pontualidade do transporte público de Campo Grande.</p>
         </div>
-
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 hover:border-amber-500/40 transition-all duration-300 shadow-lg group">
-          <div className="flex justify-between items-start">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Atraso Médio Global</p>
-            <span className="text-lg group-hover:scale-125 transition-transform duration-300">⏳</span>
-          </div>
-          <div className="flex items-baseline space-x-2 mt-2">
-            <p className="text-3xl font-extrabold text-amber-400">{tempoEsperaMedio} min</p>
-            <span className="text-xs text-slate-500">por viagem</span>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div 
-              className="bg-amber-400 h-1.5 rounded-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, (parseFloat(tempoEsperaMedio) / 30) * 100)}%` }}
-            ></div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-2xl border border-slate-800/80 hover:border-rose-500/40 transition-all duration-300 shadow-lg group sm:col-span-2 lg:col-span-1">
-          <div className="flex justify-between items-start">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Alertas Coletivos Hoje</p>
-            <span className="text-lg group-hover:scale-125 transition-transform duration-300">📢</span>
-          </div>
-          <div className="flex items-baseline space-x-2 mt-2">
-            <p className="text-3xl font-extrabold text-rose-400">{totalAlertasAtivos}</p>
-            <span className="text-xs text-rose-500/80 font-medium">Auditorias ativas</span>
-          </div>
-          <div className="w-full bg-slate-800 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div 
-              className="bg-rose-500 h-1.5 rounded-full transition-all duration-500" 
-              style={{ width: `${Math.min(100, (totalAlertasAtivos / 10) * 100)}%` }}
-            ></div>
-          </div>
+        <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+          <button 
+            onClick={() => aplicarClima('sunny')} 
+            className={`px-3 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all ${clima === 'sunny' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40' : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'}`}
+          >
+            ☀️ Dia Normal
+          </button>
+          <button 
+            onClick={() => aplicarClima('rainy')} 
+            className={`px-3 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all ${clima === 'rainy' ? 'bg-rose-500/10 text-rose-400 border-rose-500/40' : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'}`}
+          >
+            🌧️ Temporal (Chuva)
+          </button>
+          <button 
+            onClick={() => aplicarClima('pico')} 
+            className={`px-3 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all ${clima === 'pico' ? 'bg-amber-500/10 text-amber-400 border-amber-500/40' : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'}`}
+          >
+            🚗 Horário de Pico
+          </button>
         </div>
       </section>
 
-      {/* CONTEÚDO PRINCIPAL (Grid de 3 Colunas no Desktop) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* COLUNA 1 & 2: MONITORAMENTO DAS LINHAS E GRÁFICOS (Esquerda) */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* TABS DE NAVEGAÇÃO PRINCIPAL */}
+      <nav className="flex space-x-2 border-b border-slate-800 mb-8 pb-px">
+        <button 
+          onClick={() => setActiveTab('dashboard')}
+          className={`pb-4 px-4 text-sm font-bold tracking-wider relative transition-colors ${activeTab === 'dashboard' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+        >
+          🖥️ Painel Live
+          {activeTab === 'dashboard' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"></span>}
+        </button>
+        <button 
+          onClick={() => setActiveTab('rewards')}
+          className={`pb-4 px-4 text-sm font-bold tracking-wider relative transition-colors ${activeTab === 'rewards' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+        >
+          🎁 Recompensas do Cidadão
+          {activeTab === 'rewards' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"></span>}
+        </button>
+        <button 
+          onClick={() => setActiveTab('analytics')}
+          className={`pb-4 px-4 text-sm font-bold tracking-wider relative transition-colors ${activeTab === 'analytics' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
+        >
+          📊 Estatísticas do Consórcio
+          {activeTab === 'analytics' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"></span>}
+        </button>
+      </nav>
+
+      {/* ABA 1: PAINEL LIVE */}
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* TABELA DE LINHAS */}
-          <div className="bg-slate-900/45 border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                  <span>🚍 Linhas sob Auditoria</span>
-                  <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">{linhasFiltradas.length} ativas</span>
-                </h2>
-                <p className="text-xs text-slate-400">Clique em uma linha para ver detalhes e análises</p>
+          {/* COLUNA 1 & 2: TABELA DE ÔNIBUS + MAPA DE CALOR */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* TABELA DE OPERAÇÃO */}
+            <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                    <span>🚍 Status Operacional de Campo Grande</span>
+                    <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">{linhasFiltradas.length} linhas</span>
+                  </h2>
+                  <p className="text-xs text-slate-400">Dados simulados baseados nos relatos coletivos municipais</p>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Pesquisar número ou itinerário..."
+                  value={filtroPesquisa}
+                  onChange={(e) => setFiltroPesquisa(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 placeholder:text-slate-600 transition w-full sm:w-60"
+                />
               </div>
 
-              {/* FILTROS */}
-              <div className="flex flex-wrap items-center gap-2">
-                {['Todos', 'Crítico', 'Atenção', 'Normal'].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setFiltroStatus(status)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                      filtroStatus === status 
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                        : 'bg-slate-800/50 text-slate-400 border-transparent hover:bg-slate-800'
-                    }`}
-                  >
-                    {status}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* BARRA DE PESQUISA */}
-            <div className="mb-4 relative">
-              <input
-                type="text"
-                placeholder="Buscar linha pelo número ou nome..."
-                value={filtroPesquisa}
-                onChange={(e) => setFiltroPesquisa(e.target.value)}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-emerald-500/60 placeholder:text-slate-600 transition"
-              />
-              <span className="absolute right-4 top-3 text-slate-600 text-sm">🔍</span>
-            </div>
-
-            {/* TABELA REAL */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-800 text-slate-500 text-xs uppercase tracking-wider">
-                    <th className="pb-3 font-semibold">Linha</th>
-                    <th className="pb-3 font-semibold">Itinerário</th>
-                    <th className="pb-3 font-semibold text-center">Pontualidade</th>
-                    <th className="pb-3 font-semibold text-center">Atraso Médio</th>
-                    <th className="pb-3 font-semibold text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-sm">
-                  {linhasFiltradas.length > 0 ? (
-                    linhasFiltradas.map((linha) => (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase tracking-wider font-bold">
+                      <th className="pb-3">Linha</th>
+                      <th className="pb-3">Itinerário / Rotas</th>
+                      <th className="pb-3 text-center">Pontualidade</th>
+                      <th className="pb-3 text-center">Atraso</th>
+                      <th className="pb-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850 text-xs">
+                    {linhasFiltradas.map((linha) => (
                       <tr 
-                        key={linha.id} 
+                        key={linha.id}
                         onClick={() => setLinhaSelecionada(linha)}
-                        className={`hover:bg-slate-900/60 transition-all cursor-pointer ${
-                          linhaSelecionada.id === linha.id ? 'bg-slate-900/80 border-l-2 border-emerald-400 pl-2' : ''
-                        }`}
+                        className={`hover:bg-slate-900/40 cursor-pointer transition-all ${linhaSelecionada.id === linha.id ? 'bg-slate-900/60 border-l-2 border-emerald-400' : ''}`}
                       >
-                        <td className="py-3.5 font-bold text-emerald-400">#{linha.id}</td>
+                        <td className="py-3.5 pl-2 font-bold text-emerald-400">#{linha.id}</td>
                         <td className="py-3.5">
-                          <p className="text-slate-200 font-medium">{linha.nome}</p>
-                          <p className="text-xs text-slate-500">{linha.passageirosHora} pas./hora pico</p>
+                          <p className="font-semibold text-slate-200">{linha.nome}</p>
+                          <p className="text-[10px] text-slate-500">{linha.placa} • {linha.passageirosHora} pas./hora pico</p>
                         </td>
                         <td className="py-3.5 text-center">
                           <div className="inline-flex flex-col items-center">
                             <span className="font-semibold text-slate-200">{linha.pontualidade}%</span>
-                            <div className="w-12 bg-slate-800 h-1 rounded-full overflow-hidden mt-1">
-                              <div 
-                                className={`h-1 rounded-full ${linha.pontualidade > 80 ? 'bg-emerald-400' : (linha.pontualidade > 60 ? 'bg-amber-400' : 'bg-rose-500')}`} 
-                                style={{ width: `${linha.pontualidade}%` }}
-                              ></div>
+                            <div className="w-12 bg-slate-850 h-1 rounded-full overflow-hidden mt-1">
+                              <div className={`h-1 rounded-full ${linha.pontualidade > 80 ? 'bg-emerald-400' : (linha.pontualidade > 60 ? 'bg-amber-400' : 'bg-rose-500')}`} style={{ width: `${linha.pontualidade}%` }}></div>
                             </div>
                           </div>
                         </td>
@@ -320,8 +366,8 @@ export default function App() {
                             {linha.atrasoMedio} min
                           </span>
                         </td>
-                        <td className="py-3.5 text-right">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border
+                        <td className="py-3.5 text-right pr-2">
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border
                             ${linha.status === 'Crítico' ? 'bg-rose-950/30 text-rose-400 border-rose-900/40' : ''}
                             ${linha.status === 'Atenção' ? 'bg-amber-950/30 text-amber-400 border-amber-900/40' : ''}
                             ${linha.status === 'Normal' ? 'bg-slate-800 text-slate-300 border-slate-700/50' : ''}
@@ -331,237 +377,338 @@ export default function App() {
                           </span>
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="5" className="py-10 text-center text-slate-500">
-                        Nenhuma linha encontrada com os filtros antigos.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
 
-          {/* DETALHES ANALÍTICOS DA LINHA SELECIONADA */}
-          <div className="bg-slate-900/45 border border-slate-800 p-6 rounded-2xl shadow-xl">
-            <h3 className="text-base font-bold text-slate-200 mb-4 flex items-center gap-2">
-              <span>📊 Análise Profunda: Linha #{linhaSelecionada.id}</span>
-              <span className="text-xs bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-lg border border-slate-700">{linhaSelecionada.nome}</span>
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* MAPA DE ROTAS ANIMADO */}
+            <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+              <h2 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>Visualizador de Frota Live (Clique no ônibus para inspecionar)</span>
+              </h2>
               
-              {/* Grafico de Barras Customizado em CSS/SVG */}
-              <div className="md:col-span-2 space-y-4">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Atraso Médio por Período do Dia (Minutos)</p>
-                <div className="h-32 flex items-end justify-between pt-4 pb-2 px-4 bg-slate-950/60 rounded-xl border border-slate-850">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 bg-slate-950 rounded-xl overflow-hidden border border-slate-850 aspect-video relative flex items-center justify-center">
                   
-                  {/* Manhã (6h - 9h) */}
-                  <div className="flex flex-col items-center flex-1 group">
-                    <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.atrasoMedio * 1.2)}m</span>
-                    <div 
-                      className="w-10 bg-gradient-to-t from-slate-800 to-rose-500/80 rounded-t-md transition-all duration-500"
-                      style={{ height: `${Math.min(100, Math.round(linhaSelecionada.atrasoMedio * 1.2 * 3))}px` }}
-                    ></div>
-                    <span className="text-[10px] text-slate-500 mt-2 font-semibold">Pico Manhã</span>
-                  </div>
+                  {/* SVG de um pseudo-mapa de Campo Grande */}
+                  <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 0V100M40 0V100M70 0V100M90 0V100" stroke="#475569" strokeWidth="0.5"/>
+                    <path d="M0 20H100M0 50H100M0 80H100" stroke="#475569" strokeWidth="0.5"/>
+                    
+                    {/* Linhas de Rotas */}
+                    {linhas.map(linha => {
+                      const dPath = `M ${linha.rotaX.map((x, i) => `${x} ${linha.rotaY[i]}`).join(' L ')}`;
+                      return (
+                        <path 
+                          key={linha.id} 
+                          d={dPath} 
+                          stroke={linha.id === "080" ? "#f43f5e" : linha.id === "020" ? "#f59e0b" : "#10b981"} 
+                          strokeWidth="0.8" 
+                          strokeDasharray="2 3" 
+                        />
+                      );
+                    })}
+                  </svg>
 
-                  {/* Almoço (11h - 13h) */}
-                  <div className="flex flex-col items-center flex-1 group">
-                    <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.atrasoMedio * 0.8)}m</span>
-                    <div 
-                      className="w-10 bg-gradient-to-t from-slate-800 to-amber-500/80 rounded-t-md transition-all duration-500"
-                      style={{ height: `${Math.min(100, Math.round(linhaSelecionada.atrasoMedio * 0.8 * 3))}px` }}
-                    ></div>
-                    <span className="text-[10px] text-slate-500 mt-2 font-semibold">Almoço</span>
-                  </div>
+                  {/* Renderizando Ônibus Dinâmicos baseados no tick de animação */}
+                  {linhas.map(linha => {
+                    const pos = calcularPosicaoOnibus(linha.rotaX, linha.rotaY);
+                    const colorClass = linha.status === 'Crítico' ? 'bg-rose-500 shadow-rose-500/50' : linha.status === 'Atenção' ? 'bg-amber-500 shadow-amber-500/50' : 'bg-emerald-500 shadow-emerald-500/50';
+                    return (
+                      <button
+                        key={linha.id}
+                        onClick={() => setSelectedBus(linha)}
+                        className={`absolute w-4 h-4 rounded-full border-2 border-slate-950 flex items-center justify-center text-[7px] font-bold text-slate-950 shadow-lg cursor-pointer transform -translate-x-1/2 -translate-y-1/2 transition-all ${colorClass}`}
+                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                        title={`Linha ${linha.id}`}
+                      >
+                        {linha.id.slice(1)}
+                      </button>
+                    );
+                  })}
 
-                  {/* Tarde (17h - 19h) */}
-                  <div className="flex flex-col items-center flex-1 group">
-                    <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.atrasoMedio * 1.5)}m</span>
-                    <div 
-                      className="w-10 bg-gradient-to-t from-slate-800 to-rose-600 rounded-t-md transition-all duration-500"
-                      style={{ height: `${Math.min(100, Math.round(linhaSelecionada.atrasoMedio * 1.5 * 3))}px` }}
-                    ></div>
-                    <span className="text-[10px] text-slate-500 mt-2 font-semibold">Pico Tarde</span>
-                  </div>
-
-                  {/* Noite (20h - 23h) */}
-                  <div className="flex flex-col items-center flex-1 group">
-                    <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.atrasoMedio * 0.5)}m</span>
-                    <div 
-                      className="w-10 bg-gradient-to-t from-slate-800 to-emerald-500/80 rounded-t-md transition-all duration-500"
-                      style={{ height: `${Math.min(100, Math.round(linhaSelecionada.atrasoMedio * 0.5 * 3))}px` }}
-                    ></div>
-                    <span className="text-[10px] text-slate-500 mt-2 font-semibold">Noite</span>
-                  </div>
-
-                </div>
-              </div>
-
-              {/* Insights Rápidos */}
-              <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-850 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Diagnóstico PIMAC</h4>
-                  {linhaSelecionada.status === 'Crítico' ? (
-                    <p className="text-xs text-rose-400">Esta linha apresenta gargalos severos nos horários de pico da tarde. Recomendado auditar cumprimento de quadro de horários na garagem.</p>
-                  ) : linhaSelecionada.status === 'Atenção' ? (
-                    <p className="text-xs text-amber-400">Sinais de retenção moderada durante o almoço. Passageiros relatam superlotação frequente nesta rota.</p>
-                  ) : (
-                    <p className="text-xs text-emerald-400">Operação saudável. Pontualidade dentro das margens exigidas pelo plano de mobilidade municipal.</p>
+                  {/* Detalhes do ônibus clicado */}
+                  {selectedBus && (
+                    <div className="absolute bottom-3 right-3 bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-2xl max-w-xs text-xs">
+                      <div className="flex justify-between items-start mb-1.5">
+                        <span className="font-extrabold text-emerald-400">#Bus {selectedBus.id}</span>
+                        <button onClick={() => setSelectedBus(null)} className="text-slate-500 hover:text-slate-300 text-sm">×</button>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">{selectedBus.nome}</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-[10px] font-mono text-slate-300">
+                        <span>Placa: {selectedBus.placa}</span>
+                        <span>Velocidade: {selectedBus.velocidade} km/h</span>
+                        <span>Pontualidade: {selectedBus.pontualidade}%</span>
+                        <span>Atraso: {selectedBus.atrasoMedio}m</span>
+                      </div>
+                    </div>
                   )}
+
+                  <p className="text-[9px] text-slate-500 absolute bottom-2 left-3 font-mono">MAPA MULTIMODAL SIMULADO</p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-center">
-                  <span className="text-[10px] text-slate-500">MÉTRICA AMBIENTAL</span>
-                  <span className="text-xs font-semibold text-emerald-400">-{Math.round(linhaSelecionada.passageirosHora * 0.4)}kg CO₂/dia</span>
+
+                <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-850 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Metas de Consumo</span>
+                    <h3 className="text-sm font-extrabold mt-2 text-slate-200">Redução de CO₂</h3>
+                    <p className="text-xs text-slate-400 mt-1">Cada auditoria cidadã acelera as decisões públicas de realocação de frotas mais ecológicas em CG.</p>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-end">
+                    <div>
+                      <span className="text-[10px] text-slate-500 block">DESCARBONIZAÇÃO</span>
+                      <span className="text-sm font-bold text-emerald-400">-{Math.round(linhaSelecionada.passageirosHora * 0.42)} kg CO₂/dia</span>
+                    </div>
+                    <span className="text-lg">🍃</span>
+                  </div>
                 </div>
               </div>
-
             </div>
+
           </div>
 
-        </div>
-
-        {/* COLUNA 3: FEED DE AUDITORIA E FORMULÁRIO DE ENVIO (Direita) */}
-        <div className="space-y-6">
-          
-          {/* MAPA DE CALOR VECTORIAL SIMULADO */}
-          <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
-            <h2 className="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span>Visualização Espacial de Rotas</span>
-            </h2>
-            <div className="bg-slate-950 rounded-xl overflow-hidden border border-slate-850 aspect-video relative flex items-center justify-center">
-              
-              {/* SVG de um pseudo-mapa de ruas de Campo Grande/MS */}
-              <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 0V100M40 0V100M70 0V100M90 0V100" stroke="#475569" strokeWidth="0.5"/>
-                <path d="M0 20H100M0 50H100M0 80H100" stroke="#475569" strokeWidth="0.5"/>
-                {/* Linha ativa 080 */}
-                <path d="M10 20H70V80H90" stroke="#10B981" strokeWidth="1.5" strokeDasharray="3 3"/>
-              </svg>
-
-              {/* Indicadores dinâmicos no mapa */}
-              <div className="absolute top-1/4 left-1/3 flex flex-col items-center">
-                <span className="w-3.5 h-3.5 rounded-full bg-rose-500 border-2 border-slate-950 animate-pulse"></span>
-                <span className="bg-slate-900 text-[8px] text-rose-400 font-bold px-1 py-0.5 rounded border border-rose-900 mt-1">#080 Crítico</span>
-              </div>
-
-              <div className="absolute bottom-1/4 right-1/4 flex flex-col items-center">
-                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 animate-pulse"></span>
-                <span className="bg-slate-900 text-[8px] text-emerald-400 font-bold px-1 py-0.5 rounded border border-emerald-900 mt-1">#051 Bom</span>
-              </div>
-
-              <p className="text-[10px] text-slate-500 absolute bottom-2 left-3 font-mono">MAPA MULTIMODAL SIMULADO</p>
-            </div>
-          </div>
-
-          {/* FORMULÁRIO DE NOVA AUDITORIA (Cidadão reportando) */}
-          <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
-            <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-1.5">
-              <span>✍️ Nova Denúncia / Auditoria</span>
-            </h3>
+          {/* COLUNA 3: FEED DE AUDITORIA + NOVO REGISTRO */}
+          <div className="space-y-6">
             
-            <form onSubmit={lidarComEnvioRelato} className="space-y-3">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Linha afetada</label>
-                <select 
-                  value={novaLinhaRelato}
-                  onChange={(e) => setNovaLinhaRelato(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
-                >
-                  {linhas.map(l => (
-                    <option key={l.id} value={l.id}>#{l.id} - {l.nome}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* AUDITORIA FORM */}
+            <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+              <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-1.5">
+                <span>✍️ Registrar Denúncia Cidadã</span>
+              </h3>
+              
+              <form onSubmit={lidarComEnvioRelato} className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Tipo do problema</label>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Linha afetada</label>
                   <select 
-                    value={novoTipoRelato}
-                    onChange={(e) => setNovoTipoRelato(e.target.value)}
+                    value={novaLinhaRelato}
+                    onChange={(e) => setNovaLinhaRelato(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="Atraso grave">Atraso grave</option>
-                    <option value="Superlotação">Superlotação</option>
-                    <option value="Direção perigosa">Direção perigosa</option>
-                    <option value="Ponto danificado">Ponto danificado</option>
+                    {linhas.map(l => (
+                      <option key={l.id} value={l.id}>#{l.id} - {l.nome}</option>
+                    ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Seu nome (Opcional)</label>
-                  <input 
-                    type="text" 
-                    placeholder="Anônimo"
-                    value={novoAutorRelato}
-                    onChange={(e) => setNovoAutorRelato(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700"
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Problema</label>
+                    <select 
+                      value={novoTipoRelato}
+                      onChange={(e) => setNovoTipoRelato(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="Atraso grave">Atraso grave</option>
+                      <option value="Superlotação">Superlotação</option>
+                      <option value="Direção perigosa">Direção perigosa</option>
+                      <option value="Ar-Condicionado Desligado">Ar Desligado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Seu nome</label>
+                    <input 
+                      type="text" 
+                      placeholder="Anônimo"
+                      value={novoAutorRelato}
+                      onChange={(e) => setNovoAutorRelato(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">O que aconteceu?</label>
-                <textarea 
-                  rows="2"
-                  placeholder="Descreva brevemente o problema para a auditoria cidadã..."
-                  value={novoTextoRelato}
-                  onChange={(e) => setNovoTextoRelato(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700 resize-none"
-                ></textarea>
-              </div>
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Descrição do ocorrido</label>
+                  <textarea 
+                    rows="2"
+                    placeholder="Especifique localidade ou detalhes..."
+                    value={novoTextoRelato}
+                    onChange={(e) => setNovoTextoRelato(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700 resize-none"
+                  ></textarea>
+                </div>
 
-              <button 
-                type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
-              >
-                Registrar na Central
-              </button>
-            </form>
+                <button 
+                  type="submit"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
+                >
+                  Registrar e Ganhar XP + Pontos
+                </button>
+              </form>
+            </div>
+
+            {/* ALERT FEED */}
+            <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+              <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <span>🔔 Mural de Relatos Recentes</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+              </h3>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                {alertas.map((alerta) => (
+                  <div key={alerta.id} className="bg-slate-950 p-3 rounded-xl border border-slate-850 hover:border-slate-800 transition">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <span className="bg-rose-950/40 text-rose-400 border border-rose-900/40 text-[9px] px-2 py-0.5 rounded font-bold uppercase">
+                        {alerta.tipo}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-semibold">{alerta.hora} • Linha #{alerta.linha}</span>
+                    </div>
+                    <p className="text-xs text-slate-300 italic">"{alerta.texto}"</p>
+                    <span className="text-[9px] text-slate-500 block mt-2 text-right">— {alerta.autor}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          {/* FEED DE ALERTAS ATIVOS */}
-          <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+        </div>
+      )}
+
+      {/* ABA 2: RECOMPENSAS DO CIDADÃO */}
+      {activeTab === 'rewards' && (
+        <div className="space-y-6">
+          <div className="bg-slate-900/45 border border-slate-800 p-6 rounded-2xl">
+            <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-2">
+              <span>🎁 Gamificação: Moedas de Mobilidade</span>
+            </h2>
+            <p className="text-sm text-slate-400">Sua participação ativa ajuda a fiscalizar e auditar a mobilidade. Como recompensa, acumule pontos e troque por vantagens exclusivas em comércios locais parceiros de Campo Grande!</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {cuponsParceiros.map(cupom => {
+              const jaResgatou = cuponsResgatados.some(c => c.id === cupom.id);
+              const saldoInsuficiente = userProfile.moedas < cupom.custo;
+
+              return (
+                <div key={cupom.id} className={`bg-slate-900/40 p-5 rounded-2xl border transition-all flex flex-col justify-between ${jaResgatou ? 'border-slate-800 opacity-60' : 'border-slate-800 hover:border-amber-500/40'}`}>
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-3xl">{cupom.icone}</span>
+                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase">
+                        {cupom.categoria}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-extrabold text-slate-200 mt-4">{cupom.titulo}</h3>
+                    <p className="text-[11px] text-slate-500 font-medium mt-1">{cupom.parceiro}</p>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-850 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Custo</span>
+                      <span className="text-sm font-mono font-bold text-amber-400">{cupom.custo} Mob</span>
+                    </div>
+
+                    {jaResgatou ? (
+                      <span className="text-xs text-slate-400 font-bold">Resgatado ✓</span>
+                    ) : (
+                      <button
+                        onClick={() => resgatarCupom(cupom)}
+                        disabled={saldoInsuficiente}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${saldoInsuficiente ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-amber-500 hover:bg-amber-600 text-slate-950 cursor-pointer'}`}
+                      >
+                        Resgatar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* HISTÓRICO DE RESGATES */}
+          {cuponsResgatados.length > 0 && (
+            <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
+              <h3 className="text-sm font-bold text-slate-200 mb-4">🎫 Seus Cupons Disponíveis</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {cuponsResgatados.map((cupom, idx) => (
+                  <div key={idx} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-200">{cupom.titulo}</h4>
+                      <p className="text-[10px] text-slate-500">{cupom.parceiro}</p>
+                      <p className="text-[10px] text-amber-400 mt-2 font-mono tracking-widest font-bold bg-amber-500/10 px-2 py-0.5 rounded inline-block">
+                        Código: {cupom.codigo}
+                      </p>
+                    </div>
+                    <span className="text-2xl opacity-45">🎟️</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ABA 3: ESTATÍSTICAS E AUDITORIAS */}
+      {activeTab === 'analytics' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <div className="lg:col-span-2 bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
             <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-              <span>🔔 Mural de Relatos Recentes</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+              <span>📊 Histórico de Demanda por Horário: Linha #{linhaSelecionada.id}</span>
             </h3>
 
-            <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-              {alertas.map((alerta) => (
-                <div key={alerta.id} className="bg-slate-950 p-3.5 rounded-xl border border-slate-850 hover:border-slate-800 transition">
-                  <div className="flex justify-between items-start mb-1.5">
-                    <span className="bg-rose-950/40 text-rose-400 border border-rose-900/40 text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                      {alerta.tipo}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-semibold">{alerta.hora} • Linha #{alerta.linha}</span>
-                  </div>
-                  <p className="text-xs text-slate-300 italic">"{alerta.texto}"</p>
-                  <span className="text-[10px] text-slate-500 block mt-2 text-right">— {alerta.autor}</span>
-                </div>
-              ))}
+            {/* Grafico customizado de fluxo */}
+            <div className="h-44 flex items-end justify-between pt-6 pb-2 px-6 bg-slate-950/60 rounded-xl border border-slate-850">
+              
+              <div className="flex flex-col items-center flex-1 group">
+                <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.passageirosHora * 0.7)}</span>
+                <div className="w-12 bg-gradient-to-t from-slate-900 to-emerald-500/60 rounded-t-lg transition-all duration-500" style={{ height: `${Math.min(100, Math.round(linhaSelecionada.passageirosHora * 0.7 * 0.2))}px` }}></div>
+                <span className="text-[9px] text-slate-500 mt-2 font-semibold">Madrugada</span>
+              </div>
+
+              <div className="flex flex-col items-center flex-1 group">
+                <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.passageirosHora * 1.3)}</span>
+                <div className="w-12 bg-gradient-to-t from-slate-900 to-rose-500/80 rounded-t-lg transition-all duration-500" style={{ height: `${Math.min(100, Math.round(linhaSelecionada.passageirosHora * 1.3 * 0.2))}px` }}></div>
+                <span className="text-[9px] text-slate-500 mt-2 font-semibold">Pico Manhã</span>
+              </div>
+
+              <div className="flex flex-col items-center flex-1 group">
+                <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.passageirosHora * 0.9)}</span>
+                <div className="w-12 bg-gradient-to-t from-slate-900 to-amber-500/60 rounded-t-lg transition-all duration-500" style={{ height: `${Math.min(100, Math.round(linhaSelecionada.passageirosHora * 0.9 * 0.2))}px` }}></div>
+                <span className="text-[9px] text-slate-500 mt-2 font-semibold">Almoço</span>
+              </div>
+
+              <div className="flex flex-col items-center flex-1 group">
+                <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.passageirosHora * 1.5)}</span>
+                <div className="w-12 bg-gradient-to-t from-slate-900 to-rose-600 rounded-t-lg transition-all duration-500" style={{ height: `${Math.min(100, Math.round(linhaSelecionada.passageirosHora * 1.5 * 0.2))}px` }}></div>
+                <span className="text-[9px] text-slate-500 mt-2 font-semibold">Pico Tarde</span>
+              </div>
+
+              <div className="flex flex-col items-center flex-1 group">
+                <span className="text-xs text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity mb-1 font-mono">{Math.round(linhaSelecionada.passageirosHora * 0.4)}</span>
+                <div className="w-12 bg-gradient-to-t from-slate-900 to-emerald-500/80 rounded-t-lg transition-all duration-500" style={{ height: `${Math.min(100, Math.round(linhaSelecionada.passageirosHora * 0.4 * 0.2))}px` }}></div>
+                <span className="text-[9px] text-slate-500 mt-2 font-semibold">Noite</span>
+              </div>
+
+            </div>
+          </div>
+
+          <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-200 mb-3">📋 Diagnóstico de Qualidade</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                As métricas de pontualidade indicam que os maiores problemas estão centralizados nos terminais Bandeirantes e Aero Rancho durante os horários comerciais de grande fluxo.
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-850 text-xs">
+              <span className="text-[10px] text-slate-500 block uppercase font-bold tracking-wider">Acurácia Coletiva</span>
+              <span className="text-emerald-400 font-extrabold text-sm">94.8% das denúncias validadas</span>
             </div>
           </div>
 
         </div>
+      )}
 
-      </div>
-
-      {/* FOOTER COM BOTÃO DE RESET */}
-      <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-slate-900 pt-6 flex flex-col items-center gap-3">
-        <div>
-          <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Feito para o MVP de Validação</p>
-          <p className="mt-1">Todos os dados exibidos são simulados para fins de demonstração de interface de usuário.</p>
-        </div>
-        <button
-          onClick={resetarDados}
-          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-lg text-[9px] uppercase tracking-wider font-semibold transition"
+      {/* FOOTER */}
+      <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Feito com foco em validação de mercado em Mato Grosso do Sul.</p>
+        <button 
+          onClick={limparBancoDeDados}
+          className="text-slate-500 hover:text-slate-300 transition-colors underline cursor-pointer bg-transparent border-none"
         >
-          🔄 Restaurar Painel Inicial (Limpar Navegador)
+          🧹 Limpar Banco de Dados (Browser)
         </button>
       </footer>
 
