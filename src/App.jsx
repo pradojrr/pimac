@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
+// Dados iniciais simulados para o MVP das linhas de autocarros
 const dadosIniciaisLinhas = [
   { id: "080", nome: "Term. Bandeirantes / Aero Rancho", pontualidade: 62, atrasoMedio: 24, status: "Crítico", passageirosHora: 450, velocidade: 22, placa: "PIM-0801", rotaX: [20, 45, 70, 90], rotaY: [30, 40, 50, 75] },
   { id: "070", nome: "Term. Bandeirantes / Gen. Osório", pontualidade: 88, atrasoMedio: 7, status: "Normal", passageirosHora: 310, velocidade: 40, placa: "PIM-0702", rotaX: [15, 30, 55, 80], rotaY: [70, 60, 50, 20] },
@@ -7,53 +8,90 @@ const dadosIniciaisLinhas = [
   { id: "051", nome: "Shopping / Bandeirantes", pontualidade: 94, atrasoMedio: 4, status: "Excelente", passageirosHora: 180, velocidade: 45, placa: "PIM-0514", rotaX: [85, 65, 45, 20], rotaY: [15, 35, 45, 60] }
 ];
 
+// Alertas iniciais da população
 const alertasIniciais = [
-  { id: 1, hora: "12:10", linha: "080", tipo: "Atraso grave", texto: "Afonso Pena travada. Ônibus demorou 25 minutos além do planejado.", autor: "Carlos M.", xpGanho: 15 },
+  { id: 1, hora: "12:10", linha: "080", tipo: "Atraso grave", texto: "Afonso Pena congestionada. O autocarro demorou 25 minutos além do planeado.", autor: "Carlos M.", xpGanho: 15 },
   { id: 2, hora: "11:55", linha: "020", tipo: "Superlotação", texto: "Superlotado desde a saída do terminal Guaicurus.", autor: "Sandra R.", xpGanho: 15 }
 ];
 
+// Cupões de parceiros para a gamificação
 const cuponsParceiros = [
-  { id: "cupom1", titulo: "Salgado + Refri de 200ml", parceiro: "Lanchonete Term. Bandeirantes", custo: 100, icone: "🍔", categoria: "Alimentação", codigo: "PIMAC-LANCHE-98" },
+  { id: "cupom1", titulo: "Salgado + Sumo de 200ml", parceiro: "Lanchonete Term. Bandeirantes", custo: 100, icone: "🍔", categoria: "Alimentação", codigo: "PIMAC-LANCHE-98" },
   { id: "cupom2", titulo: "10% de Desconto na Cópia/Impressão", parceiro: "Copiadora Central UCDB/UFMS", custo: 150, icone: "📄", categoria: "Serviços", codigo: "PIMAC-COPIA-15" },
-  { id: "cupom3", titulo: "Café Expresso Cortesia", parceiro: "Ponto do Café Afonso Pena", custo: 200, icone: "☕", categoria: "Alimentação", codigo: "PIMAC-CAFE-FREE" },
-  { id: "cupom4", titulo: "Passe Unitário de Integração", parceiro: "Consórcio Local (Simulado)", custo: 400, icone: "🚌", categoria: "Transporte", codigo: "PIMAC-PASSE-LOCAL" }
+  { id: "cupom3", titulo: "Café Expresso de Cortesia", parceiro: "Ponto do Café Afonso Pena", custo: 200, icone: "☕", categoria: "Alimentação", codigo: "PIMAC-CAFE-FREE" },
+  { id: "cupom4", titulo: "Bilhete de Integração de Viagem", parceiro: "Consórcio Local (Simulado)", custo: 400, icone: "🚌", categoria: "Transporte", codigo: "PIMAC-PASSE-LOCAL" }
 ];
 
 export default function App() {
+  // Estados para gerir a aplicação com validação inteligente de dados antigos
   const [linhas, setLinhas] = useState(() => {
     const salvas = localStorage.getItem('pimac_linhas');
-    return salvas ? JSON.parse(salvas) : dadosIniciaisLinhas;
+    if (salvas) {
+      try {
+        const dadosParseados = JSON.parse(salvas);
+        // Se os dados salvos forem da versão antiga (sem rotaX), rejeitamos para evitar erros
+        if (Array.isArray(dadosParseados) && dadosParseados.length > 0 && dadosParseados[0].rotaX) {
+          return dadosParseados;
+        }
+      } catch (e) {
+        console.error("Erro ao carregar linhas do localStorage:", e);
+      }
+    }
+    return dadosIniciaisLinhas;
   });
 
   const [alertas, setAlertas] = useState(() => {
     const salvos = localStorage.getItem('pimac_alertas');
-    return salvos ? JSON.parse(salvos) : alertasIniciais;
+    if (salvos) {
+      try {
+        const dadosParseados = JSON.parse(salvos);
+        if (Array.isArray(dadosParseados)) return dadosParseados;
+      } catch (e) {
+        console.error("Erro ao carregar alertas do localStorage:", e);
+      }
+    }
+    return alertasIniciais;
   });
 
   const [userProfile, setUserProfile] = useState(() => {
     const salvo = localStorage.getItem('pimac_profile');
-    return salvo ? JSON.parse(salvo) : { nivel: 1, xp: 20, moedas: 120 };
+    if (salvo) {
+      try {
+        return JSON.parse(salvo);
+      } catch (e) {
+        console.error("Erro ao carregar perfil do localStorage:", e);
+      }
+    }
+    return { nivel: 1, xp: 20, moedas: 120 };
   });
 
   const [cuponsResgatados, setCuponsResgatados] = useState(() => {
     const salvos = localStorage.getItem('pimac_cupons');
-    return salvos ? JSON.parse(salvos) : [];
+    if (salvos) {
+      try {
+        return JSON.parse(salvos);
+      } catch (e) {
+        console.error("Erro ao carregar cupões do localStorage:", e);
+      }
+    }
+    return [];
   });
 
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'rewards' | 'analytics'
   const [clima, setClima] = useState('sunny'); // 'sunny' | 'rainy' | 'pico'
   const [filtroPesquisa, setFiltroPesquisa] = useState('');
-  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0]);
-  const [mapTicks, setMapTicks] = useState(0); // Controla a posição dos ônibus na animação do mapa
+  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0] || dadosIniciaisLinhas[0]);
+  const [mapTicks, setMapTicks] = useState(0); // Controla a posição dos autocarros na animação do mapa
   const [selectedBus, setSelectedBus] = useState(null);
 
-  // Formulário
+  // Estados do Formulário de Denúncias
   const [novaLinhaRelato, setNovaLinhaRelato] = useState('080');
   const [novoTipoRelato, setNovoTipoRelato] = useState('Atraso grave');
   const [novoTextoRelato, setNovoTextoRelato] = useState('');
   const [novoAutorRelato, setNovoAutorRelato] = useState('');
   const [toast, setToast] = useState(null);
 
+  // Ciclo de animação para mover os autocarros no mapa
   useEffect(() => {
     const timer = setInterval(() => {
       setMapTicks((prev) => (prev >= 100 ? 0 : prev + 0.5));
@@ -61,6 +99,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Sincronização automática com a Base de Dados Local (localStorage)
   useEffect(() => {
     localStorage.setItem('pimac_linhas', JSON.stringify(linhas));
     localStorage.setItem('pimac_alertas', JSON.stringify(alertas));
@@ -76,7 +115,7 @@ export default function App() {
   const lidarComEnvioRelato = (e) => {
     e.preventDefault();
     if (!novoTextoRelato.trim()) {
-      mostrarToast("⚠️ Descreva o ocorrido para registrar a denúncia.", "warning");
+      mostrarToast("⚠️ Descreva o ocorrido para registar a denúncia.", "warning");
       return;
     }
 
@@ -89,13 +128,13 @@ export default function App() {
       linha: novaLinhaRelato,
       tipo: novoTipoRelato,
       texto: novoTextoRelato,
-      autor: novoAutorRelato.trim() || "Anônimo",
+      autor: novoAutorRelato.trim() || "Anónimo",
       xpGanho: 15
     };
 
     setAlertas([novoAlerta, ...alertas]);
 
-    // Atualiza status da linha impactada
+    // Atualiza o estado da linha impactada pelo relato
     setLinhas(prev => prev.map(l => {
       if (l.id === novaLinhaRelato) {
         const novoAtraso = l.atrasoMedio + 5;
@@ -110,14 +149,14 @@ export default function App() {
       return l;
     }));
 
-    // Sistema de Gamificação (Dá XP e moedas de mobilidade)
+    // Sistema de Gamificação (XP e Moedas de Mobilidade)
     setUserProfile(prev => {
       let novoXp = prev.xp + 15;
       let novoNivel = prev.nivel;
       if (novoXp >= 100) {
         novoXp -= 100;
         novoNivel += 1;
-        mostrarToast(`🎉 EXCELENTE! Você subiu para o Nível ${novoNivel}!`, 'level');
+        mostrarToast(`🎉 EXCELENTE! Subiu para o Nível ${novoNivel}!`, 'level');
       }
       return {
         nivel: novoNivel,
@@ -128,7 +167,7 @@ export default function App() {
 
     setNovoTextoRelato('');
     setNovoAutorRelato('');
-    mostrarToast("✅ Auditoria enviada! Você ganhou +15 XP e +40 Moedas!");
+    mostrarToast("✅ Auditoria enviada! Ganhou +15 XP e +40 Moedas!");
   };
 
   const aplicarClima = (novoClima) => {
@@ -141,7 +180,7 @@ export default function App() {
         velocidade: Math.max(12, l.velocidade - 10),
         status: "Crítico"
       })));
-      mostrarToast("🌧️ Temporal Ativado: Tráfego lento e atrasos severos na Afonso Pena!", "info");
+      mostrarToast("🌧️ Temporal Ativado: Tráfego lento e atrasos graves nas vias principais!", "info");
     } else if (novoClima === 'pico') {
       setLinhas(prev => prev.map(l => ({
         ...l,
@@ -150,22 +189,22 @@ export default function App() {
         pontualidade: Math.max(40, l.pontualidade - 10),
         status: l.atrasoMedio > 20 ? "Crítico" : "Atenção"
       })));
-      mostrarToast("🚗 Pico Ativado: Lotações máximas registradas!", "info");
+      mostrarToast("🚗 Hora de Ponta Ativada: Lotações máximas registadas!", "info");
     } else {
       setLinhas(dadosIniciaisLinhas);
-      mostrarToast("☀️ Dia Normal Ativado: Métricas padrões reestabelecidas.");
+      mostrarToast("☀️ Dia Normal Ativado: Métricas normais restabelecidas.");
     }
   };
 
   const resgatarCupom = (cupom) => {
     if (userProfile.moedas < cupom.custo) {
-      mostrarToast("❌ Saldo de moedas insuficiente. Continue auditando!", "warning");
+      mostrarToast("❌ Saldo de moedas insuficiente. Continue a auditar!", "warning");
       return;
     }
 
     setUserProfile(prev => ({ ...prev, moedas: prev.moedas - cupom.custo }));
     setCuponsResgatados([ { ...cupom, resgatadoEm: new Date().toLocaleDateString('pt-BR') }, ...cuponsResgatados ]);
-    mostrarToast(`🎁 Cupom resgatado com sucesso! Código: ${cupom.codigo}`);
+    mostrarToast(`🎁 Cupão resgatado com sucesso! Código: ${cupom.codigo}`);
   };
 
   const limparBancoDeDados = () => {
@@ -177,15 +216,16 @@ export default function App() {
     setAlertas(alertasIniciais);
     setUserProfile({ nivel: 1, xp: 20, moedas: 120 });
     setCuponsResgatados([]);
-    mostrarToast("🧹 Todos os dados salvos no navegador foram resetados.");
+    mostrarToast("🧹 Todos os dados guardados no navegador foram repostos.");
   };
 
-  // Filtros de linhas
+  // Filtragem das linhas na pesquisa
   const linhasFiltradas = linhas.filter(l => 
     l.id.includes(filtroPesquisa) || l.nome.toLowerCase().includes(filtroPesquisa.toLowerCase())
   );
 
   const calcularPosicaoOnibus = (rotaX, rotaY) => {
+    if (!rotaX || !rotaY || rotaX.length === 0) return { x: 0, y: 0 };
     const index = Math.floor((mapTicks / 100) * (rotaX.length - 1));
     const nextIndex = (index + 1) % rotaX.length;
     const interpolado = (mapTicks / 100) * (rotaX.length - 1) - index;
@@ -198,7 +238,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4 md:p-6 selection:bg-emerald-500 selection:text-slate-950">
       
-      {/* TOAST SYSTEM */}
+      {/* SISTEMA DE NOTIFICAÇÕES (TOAST) */}
       {toast && (
         <div className={`fixed bottom-5 right-5 z-50 px-5 py-4 rounded-xl shadow-2xl flex items-center space-x-3 border animate-bounce ${
           toast.tipo === 'warning' ? 'bg-amber-950/90 border-amber-500 text-amber-300' : 
@@ -211,19 +251,19 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER DA PLATAFORMA */}
+      {/* CABEÇALHO */}
       <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 border-b border-slate-800 pb-6 gap-6">
         <div className="flex items-center space-x-3">
           <div className="bg-emerald-500 text-slate-950 p-2.5 rounded-xl font-black text-2xl tracking-tighter shadow-lg shadow-emerald-500/20">P</div>
           <div>
             <h1 className="text-2xl font-extrabold tracking-wider text-emerald-400 flex items-center gap-2">
-              PIMAC <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">GAMIFIED v2.0</span>
+              PIMAC <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded">GAMIFIED v2.1</span>
             </h1>
             <p className="text-xs text-slate-400 uppercase tracking-widest">Plataforma Integrada de Mobilidade e Auditoria Cidadã</p>
           </div>
         </div>
 
-        {/* PROFILE GAMIFICADO */}
+        {/* PERFIL DO AUDITOR */}
         <div className="flex flex-wrap items-center gap-4 bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-800 w-full xl:w-auto">
           <div className="flex items-center space-x-3">
             <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 font-extrabold text-slate-950 shadow-md">
@@ -231,7 +271,7 @@ export default function App() {
               {userProfile.nivel}
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Auditor de Campo Grande</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Auditor de Mobilidade</p>
               <div className="flex items-center space-x-2 w-28 mt-1">
                 <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                   <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${userProfile.xp}%` }}></div>
@@ -251,11 +291,11 @@ export default function App() {
         </div>
       </header>
 
-      {/* SIMULADOR DE CLIMA / EVENTOS */}
+      {/* PAINEL DE CONTROLO DO SIMULADOR */}
       <section className="bg-slate-900/40 border border-slate-800 p-4 rounded-2xl mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700/60 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Simulador PIMAC</span>
-          <p className="text-sm text-slate-300 mt-1">Simule cenários urbanos para analisar o impacto na pontualidade do transporte público de Campo Grande.</p>
+          <p className="text-sm text-slate-300 mt-1">Simule cenários urbanos para analisar o impacto na pontualidade do transporte público municipal.</p>
         </div>
         <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
           <button 
@@ -274,18 +314,18 @@ export default function App() {
             onClick={() => aplicarClima('pico')} 
             className={`px-3 py-2 rounded-xl text-xs font-semibold border flex items-center gap-1.5 transition-all ${clima === 'pico' ? 'bg-amber-500/10 text-amber-400 border-amber-500/40' : 'bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-900'}`}
           >
-            🚗 Horário de Pico
+            🚗 Hora de Ponta
           </button>
         </div>
       </section>
 
-      {/* TABS DE NAVEGAÇÃO PRINCIPAL */}
+      {/* SELEÇÃO DE ABAS */}
       <nav className="flex space-x-2 border-b border-slate-800 mb-8 pb-px">
         <button 
           onClick={() => setActiveTab('dashboard')}
           className={`pb-4 px-4 text-sm font-bold tracking-wider relative transition-colors ${activeTab === 'dashboard' ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}`}
         >
-          🖥️ Painel Live
+          🖥️ Painel em Direto
           {activeTab === 'dashboard' && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400"></span>}
         </button>
         <button 
@@ -304,22 +344,21 @@ export default function App() {
         </button>
       </nav>
 
-      {/* ABA 1: PAINEL LIVE */}
+      {/* ABA 1: PAINEL EM DIRETO */}
       {activeTab === 'dashboard' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* COLUNA 1 & 2: TABELA DE ÔNIBUS + MAPA DE CALOR */}
+          {/* TABELA DE FROTAS E MAPA ANIMA */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* TABELA DE OPERAÇÃO */}
             <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
-                    <span>🚍 Status Operacional de Campo Grande</span>
+                    <span>🚍 Estado Operacional da Frota</span>
                     <span className="text-xs bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">{linhasFiltradas.length} linhas</span>
                   </h2>
-                  <p className="text-xs text-slate-400">Dados simulados baseados nos relatos coletivos municipais</p>
+                  <p className="text-xs text-slate-400">Dados baseados nos relatos coletivos dos utilizadores</p>
                 </div>
                 <input
                   type="text"
@@ -335,10 +374,10 @@ export default function App() {
                   <thead>
                     <tr className="border-b border-slate-800 text-slate-500 text-[10px] uppercase tracking-wider font-bold">
                       <th className="pb-3">Linha</th>
-                      <th className="pb-3">Itinerário / Rotas</th>
+                      <th className="pb-3">Itinerário</th>
                       <th className="pb-3 text-center">Pontualidade</th>
                       <th className="pb-3 text-center">Atraso</th>
-                      <th className="pb-3 text-right">Status</th>
+                      <th className="pb-3 text-right">Estado</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850 text-xs">
@@ -351,7 +390,7 @@ export default function App() {
                         <td className="py-3.5 pl-2 font-bold text-emerald-400">#{linha.id}</td>
                         <td className="py-3.5">
                           <p className="font-semibold text-slate-200">{linha.nome}</p>
-                          <p className="text-[10px] text-slate-500">{linha.placa} • {linha.passageirosHora} pas./hora pico</p>
+                          <p className="text-[10px] text-slate-500">{linha.placa} • {linha.passageirosHora} pas./hora ponta</p>
                         </td>
                         <td className="py-3.5 text-center">
                           <div className="inline-flex flex-col items-center">
@@ -383,23 +422,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* MAPA DE ROTAS ANIMADO */}
+            {/* MAPA DINÂMICO VETORIAL */}
             <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
               <h2 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                <span>Visualizador de Frota Live (Clique no ônibus para inspecionar)</span>
+                <span>Visualizador de Frota em Direto (Clique no autocarro para inspecionar)</span>
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 bg-slate-950 rounded-xl overflow-hidden border border-slate-850 aspect-video relative flex items-center justify-center">
                   
-                  {/* SVG de um pseudo-mapa de Campo Grande */}
                   <svg className="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 0V100M40 0V100M70 0V100M90 0V100" stroke="#475569" strokeWidth="0.5"/>
                     <path d="M0 20H100M0 50H100M0 80H100" stroke="#475569" strokeWidth="0.5"/>
                     
-                    {/* Linhas de Rotas */}
                     {linhas.map(linha => {
+                      if (!linha.rotaX || !linha.rotaY) return null;
                       const dPath = `M ${linha.rotaX.map((x, i) => `${x} ${linha.rotaY[i]}`).join(' L ')}`;
                       return (
                         <path 
@@ -413,8 +451,9 @@ export default function App() {
                     })}
                   </svg>
 
-                  {/* Renderizando Ônibus Dinâmicos baseados no tick de animação */}
+                  {/* Renderização dos Autocarros Móveis */}
                   {linhas.map(linha => {
+                    if (!linha.rotaX || !linha.rotaY) return null;
                     const pos = calcularPosicaoOnibus(linha.rotaX, linha.rotaY);
                     const colorClass = linha.status === 'Crítico' ? 'bg-rose-500 shadow-rose-500/50' : linha.status === 'Atenção' ? 'bg-amber-500 shadow-amber-500/50' : 'bg-emerald-500 shadow-emerald-500/50';
                     return (
@@ -430,7 +469,7 @@ export default function App() {
                     );
                   })}
 
-                  {/* Detalhes do ônibus clicado */}
+                  {/* Detalhes do Autocarro Selecionado */}
                   {selectedBus && (
                     <div className="absolute bottom-3 right-3 bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-2xl max-w-xs text-xs">
                       <div className="flex justify-between items-start mb-1.5">
@@ -439,7 +478,7 @@ export default function App() {
                       </div>
                       <p className="text-[10px] text-slate-400 font-bold uppercase">{selectedBus.nome}</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-[10px] font-mono text-slate-300">
-                        <span>Placa: {selectedBus.placa}</span>
+                        <span>Matrícula: {selectedBus.placa}</span>
                         <span>Velocidade: {selectedBus.velocidade} km/h</span>
                         <span>Pontualidade: {selectedBus.pontualidade}%</span>
                         <span>Atraso: {selectedBus.atrasoMedio}m</span>
@@ -454,7 +493,7 @@ export default function App() {
                   <div>
                     <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">Metas de Consumo</span>
                     <h3 className="text-sm font-extrabold mt-2 text-slate-200">Redução de CO₂</h3>
-                    <p className="text-xs text-slate-400 mt-1">Cada auditoria cidadã acelera as decisões públicas de realocação de frotas mais ecológicas em CG.</p>
+                    <p className="text-xs text-slate-400 mt-1">Cada auditoria cidadã acelera decisões públicas para alocação de frotas ecológicas de forma eficiente.</p>
                   </div>
                   <div className="mt-4 pt-3 border-t border-slate-900 flex justify-between items-end">
                     <div>
@@ -469,13 +508,13 @@ export default function App() {
 
           </div>
 
-          {/* COLUNA 3: FEED DE AUDITORIA + NOVO REGISTRO */}
+          {/* COLUNA DO FORMULÁRIO E FEED */}
           <div className="space-y-6">
             
-            {/* AUDITORIA FORM */}
+            {/* FORMULÁRIO DE REGISTO */}
             <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
               <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-1.5">
-                <span>✍️ Registrar Denúncia Cidadã</span>
+                <span>✍️ Registar Denúncia do Cidadão</span>
               </h3>
               
               <form onSubmit={lidarComEnvioRelato} className="space-y-3">
@@ -502,15 +541,15 @@ export default function App() {
                     >
                       <option value="Atraso grave">Atraso grave</option>
                       <option value="Superlotação">Superlotação</option>
-                      <option value="Direção perigosa">Direção perigosa</option>
+                      <option value="Condução perigosa">Condução perigosa</option>
                       <option value="Ar-Condicionado Desligado">Ar Desligado</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Seu nome</label>
+                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">O seu nome</label>
                     <input 
                       type="text" 
-                      placeholder="Anônimo"
+                      placeholder="Anónimo"
                       value={novoAutorRelato}
                       onChange={(e) => setNovoAutorRelato(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700"
@@ -522,7 +561,7 @@ export default function App() {
                   <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Descrição do ocorrido</label>
                   <textarea 
                     rows="2"
-                    placeholder="Especifique localidade ou detalhes..."
+                    placeholder="Especifique a localização ou detalhes..."
                     value={novoTextoRelato}
                     onChange={(e) => setNovoTextoRelato(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 placeholder:text-slate-700 resize-none"
@@ -533,12 +572,12 @@ export default function App() {
                   type="submit"
                   className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs tracking-wider uppercase transition shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25"
                 >
-                  Registrar e Ganhar XP + Pontos
+                  Registar e Ganhar XP + Pontos
                 </button>
               </form>
             </div>
 
-            {/* ALERT FEED */}
+            {/* FEED DE ALERTAS RECENTES */}
             <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
               <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
                 <span>🔔 Mural de Relatos Recentes</span>
@@ -566,14 +605,14 @@ export default function App() {
         </div>
       )}
 
-      {/* ABA 2: RECOMPENSAS DO CIDADÃO */}
+      {/* ABA 2: PAINEL DE RECOMPENSAS */}
       {activeTab === 'rewards' && (
         <div className="space-y-6">
           <div className="bg-slate-900/45 border border-slate-800 p-6 rounded-2xl">
             <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2 mb-2">
               <span>🎁 Gamificação: Moedas de Mobilidade</span>
             </h2>
-            <p className="text-sm text-slate-400">Sua participação ativa ajuda a fiscalizar e auditar a mobilidade. Como recompensa, acumule pontos e troque por vantagens exclusivas em comércios locais parceiros de Campo Grande!</p>
+            <p className="text-sm text-slate-400">A sua participação ativa ajuda a fiscalizar e a auditar o transporte municipal. Acumule moedas de mobilidade virtuais ao enviar denúncias e troque-as por cupões reais em comércio local parceiro!</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -620,7 +659,7 @@ export default function App() {
           {/* HISTÓRICO DE RESGATES */}
           {cuponsResgatados.length > 0 && (
             <div className="bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
-              <h3 className="text-sm font-bold text-slate-200 mb-4">🎫 Seus Cupons Disponíveis</h3>
+              <h3 className="text-sm font-bold text-slate-200 mb-4">🎫 Os seus Cupões Disponíveis</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cuponsResgatados.map((cupom, idx) => (
                   <div key={idx} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
@@ -640,16 +679,16 @@ export default function App() {
         </div>
       )}
 
-      {/* ABA 3: ESTATÍSTICAS E AUDITORIAS */}
+      {/* ABA 3: ESTATÍSTICAS E AUDITORIA COMPLETA */}
       {activeTab === 'analytics' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           <div className="lg:col-span-2 bg-slate-900/45 border border-slate-800 p-5 rounded-2xl shadow-xl">
             <h3 className="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
-              <span>📊 Histórico de Demanda por Horário: Linha #{linhaSelecionada.id}</span>
+              <span>📊 Histórico de Demanda por Período: Linha #{linhaSelecionada.id}</span>
             </h3>
 
-            {/* Grafico customizado de fluxo */}
+            {/* Gráfico customizado de fluxo de passageiros */}
             <div className="h-44 flex items-end justify-between pt-6 pb-2 px-6 bg-slate-950/60 rounded-xl border border-slate-850">
               
               <div className="flex flex-col items-center flex-1 group">
@@ -689,7 +728,7 @@ export default function App() {
             <div>
               <h3 className="text-sm font-bold text-slate-200 mb-3">📋 Diagnóstico de Qualidade</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                As métricas de pontualidade indicam que os maiores problemas estão centralizados nos terminais Bandeirantes e Aero Rancho durante os horários comerciais de grande fluxo.
+                As métricas indicam atrasos pontuais e de sobrecarga centralizados nos terminais Bandeirantes e Aero Rancho durante os horários comerciais de maior fluxo.
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-850 text-xs">
@@ -701,14 +740,14 @@ export default function App() {
         </div>
       )}
 
-      {/* FOOTER */}
+      {/* RODAPÉ */}
       <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Feito com foco em validação de mercado em Mato Grosso do Sul.</p>
+        <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Protótipo gamificado de testes locais.</p>
         <button 
           onClick={limparBancoDeDados}
           className="text-slate-500 hover:text-slate-300 transition-colors underline cursor-pointer bg-transparent border-none"
         >
-          🧹 Limpar Banco de Dados (Browser)
+          🧹 Repor Base de Dados (Navegador)
         </button>
       </footer>
 
