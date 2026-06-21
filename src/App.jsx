@@ -18,12 +18,20 @@ const alertasIniciais = [
 ];
 
 export default function App() {
-  // Estados para gerenciar a aplicação
-  const [linhas, setLinhas] = useState(dadosIniciaisLinhas);
-  const [alertas, setAlertas] = useState(alertasIniciais);
+  // Estados que tentam carregar do localStorage antes de usar os dados iniciais
+  const [linhas, setLinhas] = useState(() => {
+    const salvas = localStorage.getItem('pimac_linhas');
+    return salvas ? JSON.parse(salvas) : dadosIniciaisLinhas;
+  });
+
+  const [alertas, setAlertas] = useState(() => {
+    const salvos = localStorage.getItem('pimac_alertas');
+    return salvos ? JSON.parse(salvos) : alertasIniciais;
+  });
+
   const [filtroPesquisa, setFiltroPesquisa] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('Todos');
-  const [linhaSelecionada, setLinhaSelecionada] = useState(dadosIniciaisLinhas[0]);
+  const [linhaSelecionada, setLinhaSelecionada] = useState(linhas[0] || dadosIniciaisLinhas[0]);
   
   // Estado para o formulário de novos alertas de auditoria
   const [novaLinhaRelato, setNovaLinhaRelato] = useState('080');
@@ -44,12 +52,34 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Mostrar aviso de sucesso (Toast personalizado - evita usar alert)
+  // Monitora mudanças nas linhas e salva no localStorage automaticamente
+  useEffect(() => {
+    localStorage.setItem('pimac_linhas', JSON.stringify(linhas));
+  }, [linhas]);
+
+  // Monitora mudanças nos alertas e salva no localStorage automaticamente
+  useEffect(() => {
+    localStorage.setItem('pimac_alertas', JSON.stringify(alertas));
+  }, [alertas]);
+
+  // Mostrar aviso de sucesso (Toast personalizado)
   const mostrarToast = (mensagem) => {
     setToastMensagem(mensagem);
     setTimeout(() => {
       setToastMensagem(null);
     }, 4000);
+  };
+
+  // Função para limpar todos os dados salvos e resetar para o padrão inicial
+  const resetarDados = () => {
+    if (window.confirm("Deseja limpar todos os relatos cadastrados e restaurar o painel padrão?")) {
+      localStorage.removeItem('pimac_linhas');
+      localStorage.removeItem('pimac_alertas');
+      setLinhas(dadosIniciaisLinhas);
+      setAlertas(alertasIniciais);
+      setLinhaSelecionada(dadosIniciaisLinhas[0]);
+      mostrarToast("🔄 Dados padrão restaurados com sucesso!");
+    }
   };
 
   // Função para enviar o relato de auditoria
@@ -82,7 +112,6 @@ export default function App() {
         const novaPontualidade = Math.max(30, l.pontualidade - 4);
         const novoStatus = novoAtraso > 20 ? "Crítico" : (novoAtraso > 10 ? "Atenção" : "Normal");
         
-        // Se a linha editada for a que está selecionada no painel de detalhes, atualiza ela também
         const linhaAtualizada = { ...l, atrasoMedio: novoAtraso, pontualidade: novaPontualidade, status: novoStatus };
         if (linhaSelecionada.id === l.id) {
           setLinhaSelecionada(linhaAtualizada);
@@ -267,7 +296,7 @@ export default function App() {
                         key={linha.id} 
                         onClick={() => setLinhaSelecionada(linha)}
                         className={`hover:bg-slate-900/60 transition-all cursor-pointer ${
-                          linhaSelecionada.id === Math.round(linha.id) || linhaSelecionada.id === linha.id ? 'bg-slate-900/80 border-l-2 border-emerald-400 pl-2' : ''
+                          linhaSelecionada.id === linha.id ? 'bg-slate-900/80 border-l-2 border-emerald-400 pl-2' : ''
                         }`}
                       >
                         <td className="py-3.5 font-bold text-emerald-400">#{linha.id}</td>
@@ -306,7 +335,7 @@ export default function App() {
                   ) : (
                     <tr>
                       <td colSpan="5" className="py-10 text-center text-slate-500">
-                        Nenhuma linha encontrada com os filtros atuais.
+                        Nenhuma linha encontrada com os filtros antigos.
                       </td>
                     </tr>
                   )}
@@ -522,10 +551,18 @@ export default function App() {
 
       </div>
 
-      {/* FOOTER */}
-      <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-slate-900 pt-6">
-        <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Feito para o MVP de Validação</p>
-        <p className="mt-1">Todos os dados exibidos são simulados para fins de demonstração de interface de usuário.</p>
+      {/* FOOTER COM BOTÃO DE RESET */}
+      <footer className="mt-12 text-center text-[10px] text-slate-600 border-t border-slate-900 pt-6 flex flex-col items-center gap-3">
+        <div>
+          <p>PIMAC - Plataforma Integrada de Mobilidade e Auditoria Cidadã • Feito para o MVP de Validação</p>
+          <p className="mt-1">Todos os dados exibidos são simulados para fins de demonstração de interface de usuário.</p>
+        </div>
+        <button
+          onClick={resetarDados}
+          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-400 hover:text-slate-200 border border-slate-800 rounded-lg text-[9px] uppercase tracking-wider font-semibold transition"
+        >
+          🔄 Restaurar Painel Inicial (Limpar Navegador)
+        </button>
       </footer>
 
     </div>
